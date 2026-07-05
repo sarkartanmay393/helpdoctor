@@ -16,10 +16,14 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 
 load_dotenv(PROJECT_ROOT / ".env")
 
-# Single-user local demo: disable cognee 1.x multi-tenant access control and
-# the session-memory layer (both on by default) so the graph contains only
-# the patient documents and every run is deterministic.
-os.environ.setdefault("ENABLE_BACKEND_ACCESS_CONTROL", "false")
+# ENABLE_BACKEND_ACCESS_CONTROL=true is load-bearing for patient isolation:
+# with it OFF all datasets share one graph and recall(datasets=[pid])
+# silently searches across patients (verified: patient B's scope answered
+# from patient A's records). With it ON cognee keeps per-dataset databases
+# and cross-patient questions correctly come back empty.
+os.environ.setdefault("ENABLE_BACKEND_ACCESS_CONTROL", "true")
+# Session-memory cache off: per-patient partitioning uses datasets, and a
+# deterministic graph (documents only) demos better.
 os.environ.setdefault("CACHING", "false")
 
 # Keep all cognee storage inside the project instead of site-packages.
@@ -39,9 +43,34 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 if not os.environ.get("LLM_API_KEY") and os.environ.get("OPENAI_API_KEY"):
     os.environ["LLM_API_KEY"] = os.environ["OPENAI_API_KEY"]
 
-DATASET_NAME = "patient_records"
+# text-embedding-3-small instead of cognee's default 3-large: low-tier
+# OpenAI projects cap 3-large at 10k tokens/min, which throttles bulk
+# ingestion into a crawl of 429-retries; 3-small has far higher limits and
+# is plenty for this corpus. Dimensions auto-derive from the model name.
+os.environ.setdefault("EMBEDDING_MODEL", "openai/text-embedding-3-small")
+
+# Per-patient partitioning (cognee 1.2.2 lifecycle API):
+# The hackathon plan was remember(..., session_id=patient_id), but in the
+# installed version session_id selects the *conversation session cache*
+# (requires CACHING=true, bridges to the graph in the background) — it is
+# NOT a content partition, and forget()/improve() don't accept it at all.
+# The partition boundary that all four verbs share is the dataset:
+#   remember(dataset_name=pid) / recall(datasets=[pid])
+#   improve(dataset=pid)       / forget(dataset=pid)
+# So patient_id == cognee dataset name here. Also noted in the README.
+DEMO_PATIENT_ID = "anjali_deshpande"
+DEMO_PATIENT_NAME = "Anjali Deshpande (synthetic demo patient)"
 DOCUMENTS_DIR = PROJECT_ROOT / "data" / "patient_records"
-GRAPH_HTML_PATH = _COGNEE_DIR / "graph.html"
+
+# Kept for backwards compatibility with earlier scripts.
+DATASET_NAME = DEMO_PATIENT_ID
+
+
+def graph_html_path(patient_id: str) -> Path:
+    return _COGNEE_DIR / f"graph_{patient_id}.html"
+
+
+GRAPH_HTML_PATH = graph_html_path(DEMO_PATIENT_ID)
 
 
 def require_llm_key() -> None:

@@ -1,11 +1,12 @@
 """Demo queries for the Patient Health Memory assistant"""
 
 import asyncio
+import re
 import sys
 from typing import Any
 
 import cognee_setup  # must come before `import cognee` (sets env vars)
-from cognee_setup import DATASET_NAME, require_llm_key
+from cognee_setup import DEMO_PATIENT_ID, require_llm_key
 
 import cognee
 from cognee import SearchType
@@ -16,15 +17,13 @@ from cognee import SearchType
 # q1  SINGLE-HOP sanity check: fully answerable from document 1 alone.
 #
 # q2  MULTI-HOP: "atrial fibrillation" is named ONLY in document 1; the
-#     medication treating it (apixaban) appears ONLY in document 4, which
+#     November 2025 medication (apixaban) appears ONLY in document 4, which
 #     refers back to the diagnosis merely as "the rhythm disorder documented
 #     in the January 2025 discharge summary". Answering requires joining
 #     doc 1 <-> doc 4 through the graph.
 #
 # q3  MULTI-HOP: the care chain Kulkarni -> Nair -> Menon is spread over
-#     documents 1, 2, 3, 4 and 5; no single document lists all three doctors'
-#     roles in sequence. (Doc 5 comes closest but relies on the others for
-#     what each doctor actually did.)
+#     documents 1-5; no single document lists all three doctors' roles.
 #
 # q4  TEMPORAL: requires ordering events in time — symptoms before the
 #     November 2025 consultation (docs 3/4) vs. after it (doc 5) — which is
@@ -48,13 +47,12 @@ DEMO_QUESTIONS: list[dict[str, str]] = [
     {
         "id": "q2_multi_hop_medication",
         "label": "Multi-hop: medication in doc 4, condition named only in doc 1",
-        "question": "What medication was prescribed for the heart condition "
-                    "that Dr. Kulkarni diagnosed during the January 2025 "
-                    "hospitalization, and who prescribed it?",
+        "question": "What new medication was Anjali prescribed in November "
+                    "2025, and what is the name of the condition it treats?",
     },
     {
         "id": "q3_multi_hop_care_chain",
-        "label": "Multi-hop: care chain across all five documents",
+        "label": "Multi-hop: care chain across five documents",
         "question": "Which doctors have been involved in Anjali Deshpande's "
                     "cardiac care, and how did she get from one to the next?",
     },
@@ -72,10 +70,39 @@ DEMO_QUESTIONS: list[dict[str, str]] = [
     },
 ]
 
+# Both sides of the comparison run with the SAME strict grounding prompt.
+# Without it, the LLM answers "what is apixaban treating?" from general
+# medical knowledge (apixaban -> AFib) without any document saying so —
+# which is both an unfair baseline and exactly the hallucination a medical
+# records product must not make.
+GROUNDED_PROMPT = (
+    "Answer using ONLY the provided context from this patient's records. "
+    "Never use outside medical knowledge to fill gaps — if the context does "
+    "not state a fact (for example the name of a condition), say the records "
+    "you can see do not name it. Be concise."
+)
+
+# cognee appends an "Evidence:" block (chunk/document listing) to the
+# completion when include_references=True. Split it off: text before is the
+# clean answer, document names in it become the sources list.
+_EVIDENCE_SPLIT = "\nEvidence:"
+_DOC_NAME_RE = re.compile(r"of document (\S+)")
+
+
+def split_answer_and_sources(text: str) -> tuple[str, list[str]]:
+    answer, _, evidence = text.partition(_EVIDENCE_SPLIT)
+    seen: set[str] = set()
+    sources = [d for d in _DOC_NAME_RE.findall(evidence)
+               if not (d in seen or seen.add(d))]
+    return answer.strip(), sources
+
 
 def unpack_search_results(results: list) -> tuple[str, list[str]]:
-    """Flatten cognee SearchResult objects into (answer_text, source_names)"""
-    
+    """Flatten cognee search/recall results into (answer_text, source_names).
+
+    Payload shapes vary by query type and API (str, list, dict, SearchResult,
+    or pydantic Response*Entry from recall) — unpack defensively.
+    """
     answers: list[str] = []
     sources: list[str] = []
 
@@ -101,36 +128,59 @@ def unpack_search_results(results: list) -> tuple[str, list[str]]:
         elif isinstance(item, list):
             for sub in item:
                 visit(sub)
+        elif hasattr(item, "model_dump"):  # pydantic recall entries
+            visit(item.model_dump())
+        elif hasattr(item, "search_result"):
+            visit(item.search_result)
         else:
             answers.append(str(item))
 
     for result in results:
-        visit(getattr(result, "search_result", result))
+        visit(result)
 
+    joined = "\n".join(a.strip() for a in answers if a.strip())
+    answer, evidence_sources = split_answer_and_sources(joined)
     seen: set[str] = set()
-    unique_sources = [s for s in sources if not (s in seen or seen.add(s))]
-    return "\n".join(a.strip() for a in answers if a.strip()), unique_sources
+    all_sources = [s for s in sources + evidence_sources
+                   if not (s in seen or seen.add(s))]
+    return answer, all_sources
 
 
-async def ask_graph(question: str) -> tuple[str, list[str]]:
-    """Graph-grounded answer (the product). include_references=True asks
-    cognee to attach source attribution when the retriever supports it."""
-    results = await cognee.search(
-        query_text=question,
-        query_type=SearchType.GRAPH_COMPLETION,
-        datasets=[DATASET_NAME],
+async def ask_graph(question: str, patient_id: str = DEMO_PATIENT_ID) -> tuple[str, list[str]]:
+    """Graph answer via recall() (the product).
+
+    GRAPH_COMPLETION_COT with max_iter=2: the chain-of-thought pass issues a
+    follow-up retrieval that makes the cross-document hop (e.g. prescription
+    -> discharge summary -> condition name) which single-shot triplet
+    retrieval misses even at top_k=50 — verified empirically. Costs ~40-70s;
+    the accuracy is the demo.
+    """
+    results = await cognee.recall(
+        question,
+        query_type=SearchType.GRAPH_COMPLETION_COT,
+        datasets=[patient_id],
+        top_k=30,
+        retriever_specific_config={"max_iter": 2},
+        system_prompt=GROUNDED_PROMPT,
         include_references=True,
     )
     return unpack_search_results(results)
 
 
-async def ask_vector_baseline(question: str) -> str:
-    """Plain vector-retrieval RAG over chunks — the naive baseline that the
-    demo contrasts against. No graph traversal happens here."""
-    results = await cognee.search(
-        query_text=question,
+async def ask_vector_baseline(question: str, patient_id: str = DEMO_PATIENT_ID) -> str:
+    """Plain vector-retrieval RAG baseline — no graph traversal.
+
+    top_k=3 chunks, the typical RAG-tutorial setup. With unlimited k on a
+    small corpus the "baseline" would just read the whole archive into
+    context, which neither scales nor resembles production vector RAG —
+    the point of the comparison is what retrieval alone finds.
+    """
+    results = await cognee.recall(
+        question,
         query_type=SearchType.RAG_COMPLETION,
-        datasets=[DATASET_NAME],
+        datasets=[patient_id],
+        top_k=3,
+        system_prompt=GROUNDED_PROMPT,
     )
     answer, _ = unpack_search_results(results)
     return answer
@@ -141,12 +191,12 @@ async def main(compare: bool) -> None:
     for i, q in enumerate(DEMO_QUESTIONS, 1):
         print(f"\n{'=' * 72}\n[{i}/5] {q['label']}\nQ: {q['question']}\n")
         answer, refs = await ask_graph(q["question"])
-        print(f"GRAPH ANSWER:\n{answer}")
+        print(f"GRAPH ANSWER (recall):\n{answer}")
         if refs:
             print(f"\nSources: {', '.join(refs)}")
         if compare:
             baseline = await ask_vector_baseline(q["question"])
-            print(f"\nVECTOR-ONLY BASELINE (RAG_COMPLETION):\n{baseline}")
+            print(f"\nVECTOR-ONLY BASELINE (RAG_COMPLETION, top_k=3):\n{baseline}")
     print(f"\n{'=' * 72}\nDone.")
 
 

@@ -16,6 +16,7 @@
     --baseline-soft: #faf3dd;
     --border: #d8e0e7;
     --danger: #b3372f;
+    --danger-soft: #fbe9e7;
   }
   * { box-sizing: border-box; margin: 0; }
   body {
@@ -33,39 +34,55 @@
     background: var(--baseline-soft); color: var(--baseline);
   }
   #status-pill.ok { background: var(--accent-soft); color: var(--accent); }
-  #ingest-btn {
-    padding: 6px 14px; border: 1px solid var(--accent); border-radius: 6px;
-    background: var(--accent); color: #fff; font-size: .85rem; cursor: pointer;
-  }
-  #ingest-btn:disabled { opacity: .55; cursor: wait; }
   main {
-    display: grid; grid-template-columns: minmax(420px, 1fr) minmax(380px, 1fr);
-    gap: 18px; padding: 18px 24px; max-width: 1500px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 18px;
+    padding: 18px 24px; max-width: 960px; margin: 0 auto;
   }
-  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
   section.panel {
     background: var(--panel); border: 1px solid var(--border);
     border-radius: 10px; padding: 16px;
   }
-  section.panel h2 { font-size: .95rem; margin-bottom: 10px; }
+  section.panel h2 { font-size: .95rem; margin-bottom: 4px; }
+  section.panel .hint { color: var(--muted); font-size: .8rem; margin-bottom: 12px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  select, input[type=text] {
+    padding: 8px 10px; font-size: .9rem;
+    border: 1px solid var(--border); border-radius: 8px; background: #fff;
+  }
+  input[type=file] { font-size: .85rem; }
+  textarea {
+    width: 100%; padding: 10px 12px; font-size: .9rem; resize: vertical;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: inherit; background: #fff;
+  }
+  button {
+    padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer;
+    background: var(--accent); color: #fff; font-size: .9rem;
+  }
+  button:disabled { opacity: .55; cursor: wait; }
+  button.secondary {
+    background: var(--bg); color: var(--ink); border: 1px solid var(--border);
+  }
+  button.danger { background: var(--danger); }
+  .msg { font-size: .82rem; margin-top: 8px; white-space: pre-wrap; }
+  .msg.ok { color: var(--accent); }
+  .msg.err { color: var(--danger); }
+  #doc-list { margin: 10px 0 4px; font-size: .84rem; }
+  #doc-list table { border-collapse: collapse; width: 100%; }
+  #doc-list td, #doc-list th {
+    text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border);
+  }
+  #doc-list th { color: var(--muted); font-weight: 600; font-size: .76rem; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
   .chips button {
-    font-size: .78rem; padding: 5px 10px; border-radius: 999px; cursor: pointer;
+    font-size: .78rem; padding: 5px 10px; border-radius: 999px;
     border: 1px solid var(--border); background: var(--bg); color: var(--ink);
     text-align: left;
   }
   .chips button:hover { border-color: var(--accent); color: var(--accent); }
-  #ask-form { display: flex; gap: 8px; margin-bottom: 14px; }
-  #question {
-    flex: 1; padding: 10px 12px; font-size: .95rem;
-    border: 1px solid var(--border); border-radius: 8px;
-  }
-  #ask-btn {
-    padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer;
-    background: var(--accent); color: #fff; font-size: .95rem;
-  }
-  #ask-btn:disabled { opacity: .55; cursor: wait; }
-  label.compare { font-size: .8rem; color: var(--muted); display: block; margin: -6px 0 12px; }
+  #ask-form { display: flex; gap: 8px; margin-bottom: 8px; }
+  #question { flex: 1; }
+  label.compare { font-size: .8rem; color: var(--muted); display: block; margin-bottom: 12px; }
   #answers { display: flex; flex-direction: column; gap: 14px; }
   .qa { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .qa .q { padding: 10px 14px; font-weight: 600; font-size: .9rem; background: var(--bg); }
@@ -83,9 +100,29 @@
   .pending { color: var(--muted); font-style: italic; }
   #graph-frame { width: 100%; height: 520px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
   #graph-empty { color: var(--muted); font-size: .85rem; padding: 20px 0; }
+  /* Doctor's Desk — visually distinct (blue) from the patient-side green */
+  :root { --desk: #1d5c8f; --desk-soft: #e4eef7; }
+  section.desk { border-left: 4px solid var(--desk); }
+  section.desk h2 { color: var(--desk); }
+  #desk-form { display: flex; gap: 8px; margin-bottom: 12px; }
+  #desk-question { flex: 1; padding: 8px 10px; font-size: .9rem;
+    border: 1px solid var(--border); border-radius: 8px; }
+  #desk-form button { background: var(--desk); }
+  #desk-chips button:hover { border-color: var(--desk); color: var(--desk); }
+  #desk-answers { display: flex; flex-direction: column; gap: 12px; }
+  .desk-qa { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .desk-qa .q { padding: 8px 12px; font-weight: 600; font-size: .88rem; background: var(--bg); }
+  .desk-qa .a { padding: 10px 12px; font-size: .88rem; white-space: pre-wrap; }
+  .desk-qa .route {
+    display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
+    background: var(--desk-soft); color: var(--desk);
+  }
   .why ul { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: .88rem; }
   .why b { color: var(--accent); }
   .footnote { font-size: .75rem; color: var(--muted); margin-top: 10px; }
+  #new-patient-fields { display: none; gap: 8px; margin-top: 8px; }
+  #new-patient-fields.visible { display: flex; }
 </style>
 </head>
 <body>
@@ -93,69 +130,184 @@
 <header>
   <div>
     <h1>Patient Health Memory</h1>
-    <div class="sub">One patient &middot; 3 doctors &middot; 3 cities &middot; 5 scattered records &mdash; connected by a Cognee knowledge graph</div>
+    <div class="sub">A patient-owned memory graph &mdash; doctors contribute records, the patient owns and can erase them</div>
   </div>
   <span id="status-pill">checking&hellip;</span>
-  <button id="ingest-btn">Ingest records</button>
 </header>
 
 <main>
-  <div style="display:flex; flex-direction:column; gap:18px;">
-    <section class="panel">
-      <h2>Ask about the patient's history</h2>
-      <div class="chips" id="chips"></div>
-      <form id="ask-form">
-        <input id="question" type="text" placeholder="e.g. What condition is the apixaban treating?" autocomplete="off">
-        <button id="ask-btn" type="submit">Ask</button>
-      </form>
-      <label class="compare">
-        <input type="checkbox" id="compare" checked>
-        Also show vector-only RAG baseline (side-by-side comparison)
-      </label>
-      <div id="answers"></div>
-    </section>
-
-    <section class="panel why">
-      <h2>Why this isn't just RAG</h2>
-      <ul>
-        <li><b>Answers come from graph traversal, not single-chunk retrieval.</b>
-            The prescription record never names the patient's condition &mdash; it only points
-            to a discharge summary from a different hospital. Vector search over that chunk
-            can't name the condition; the graph walks the link and can.</li>
-        <li><b>Entities are shared across documents.</b> "Dr. Kulkarni", "the January 2025
-            admission" and "the rhythm disorder" resolve to the same graph nodes whether they
-            appear in a Pune discharge summary, a Mumbai lab report, or a Chennai prescription.</li>
-        <li><b>Time is part of the graph.</b> Ingestion runs temporal extraction, so
-            "what changed after she saw Dr. Menon?" is answered by ordering events, not by
-            hoping the right chunk mentions both dates.</li>
-      </ul>
-      <div class="footnote">Ask the same question with the baseline enabled and compare the two answers live.</div>
-    </section>
-  </div>
-
+  <!-- 1. PATIENT SELECTOR -->
   <section class="panel">
-    <h2>The knowledge graph the answers traverse</h2>
+    <h2>1 &middot; Patient</h2>
+    <div class="hint">Records below are ingested into this patient's own memory graph. A name in a dropdown is not a login &mdash; there are no accounts here.</div>
+    <div class="row">
+      <select id="patient-select"></select>
+      <button id="seed-btn" class="secondary" title="Ingest the 9 synthetic demo records">Load synthetic demo patient</button>
+      <button id="forget-btn" class="danger" title="cognee.forget(dataset=patient) — erases this patient's graph">Forget this patient's data</button>
+    </div>
+    <div id="new-patient-fields" class="row">
+      <input type="text" id="new-patient-id" placeholder="new patient id (e.g. ravi_kumar)">
+      <input type="text" id="new-patient-name" placeholder="display name (optional)">
+    </div>
+    <div id="doc-list"></div>
+    <div class="msg" id="patient-msg"></div>
+  </section>
+
+  <!-- 2. DOCUMENT UPLOAD -->
+  <section class="panel">
+    <h2>2 &middot; Add a medical document</h2>
+    <div class="hint">.txt or .pdf &mdash; a discharge summary, lab report, prescription&hellip; Re-uploading the same file is detected by content hash and skipped.</div>
+    <form id="doc-form" class="row">
+      <input type="file" id="doc-file" accept=".txt,.pdf">
+      <button type="submit" id="doc-btn">Ingest document</button>
+    </form>
+    <div class="msg" id="doc-msg"></div>
+  </section>
+
+  <!-- 3. PASTED CONVERSATION TRANSCRIPT -->
+  <section class="panel">
+    <h2>3 &middot; Paste a conversation transcript</h2>
+    <div class="hint">In production this is fed by speech-to-text on consultation audio; the demo ingests the transcript text directly. Goes into the selected patient's memory like any document &mdash; duplicate pastes are caught by the same content-hash dedup.</div>
+    <form id="transcript-form">
+      <textarea id="transcript-text" rows="5" placeholder="Doctor: How have you been since the last visit?&#10;Patient: Much better, but ..."></textarea>
+      <div class="row" style="margin-top:8px">
+        <button type="submit" id="transcript-btn">Ingest transcript</button>
+      </div>
+    </form>
+    <div class="msg" id="transcript-msg"></div>
+  </section>
+
+  <!-- 4. CHAT -->
+  <section class="panel">
+    <h2>4 &middot; Ask about this patient's history</h2>
+    <div class="chips" id="chips"></div>
+    <form id="ask-form">
+      <input id="question" type="text" placeholder="e.g. What condition is the apixaban treating?" autocomplete="off">
+      <button id="ask-btn" type="submit">Ask</button>
+    </form>
+    <label class="compare">
+      <input type="checkbox" id="compare" checked>
+      Also show vector-only RAG baseline (side-by-side comparison)
+    </label>
+    <div id="answers"></div>
+  </section>
+
+  <!-- 5. DOCTOR'S DESK (global, cross-registry — no patient selector) -->
+  <section class="panel desk">
+    <h2>5 &middot; Doctor's Desk</h2>
+    <div class="hint">A doctor-facing view across the whole registry. Name the patient in the question itself &mdash; a deterministic router picks the answer path: <b>sql</b> (registry lookup), <b>seed_data</b> (today's demo roster), or <b>recall</b> (that patient's memory graph). The badge on each answer shows which path ran.</div>
+    <div class="chips" id="desk-chips"></div>
+    <form id="desk-form">
+      <input id="desk-question" type="text" placeholder="e.g. When did Anjali Deshpande last visit?" autocomplete="off">
+      <button id="desk-btn" type="submit">Ask</button>
+    </form>
+    <div id="desk-answers"></div>
+  </section>
+
+  <!-- 6. GRAPH -->
+  <section class="panel">
+    <h2>6 &middot; The knowledge graph the answers traverse</h2>
     <iframe id="graph-frame" title="Knowledge graph" hidden></iframe>
-    <div id="graph-empty">Graph not available yet &mdash; run ingestion, then this panel loads automatically.</div>
+    <div id="graph-empty">No graph yet for this patient &mdash; ingest something above and this panel loads automatically.</div>
     <div class="footnote">All patient data is synthetic and clearly fictional.</div>
+  </section>
+
+  <!-- 7. WHY THIS ISN'T JUST RAG -->
+  <section class="panel why">
+    <h2>7 &middot; Why this isn't just RAG</h2>
+    <ul>
+      <li><b>Answers come from graph traversal, not single-chunk retrieval.</b>
+          The prescription record never names the patient's condition &mdash; it only points
+          to a discharge summary from a different hospital. Vector search over that chunk
+          can't name the condition; the graph walks the link and can.</li>
+      <li><b>Entities are shared across documents.</b> "Dr. Kulkarni", "the January 2025
+          admission" and "the rhythm disorder" resolve to the same graph nodes whether they
+          appear in a Pune discharge summary, a Mumbai lab report, or a Chennai prescription.</li>
+      <li><b>Time is part of the graph.</b> Ingestion runs temporal extraction, so
+          "what changed after she saw Dr. Menon?" is answered by ordering events, not by
+          hoping the right chunk mentions both dates.</li>
+    </ul>
+    <div class="footnote">Ask the same question with the baseline enabled and compare the two answers live.</div>
   </section>
 </main>
 
 <script>
 const $ = (id) => document.getElementById(id);
 const API = ""; // same origin; set to "http://localhost:8000" if serving index.html separately
+const NEW_PATIENT = "__new__";
 let demoQuestions = [];
+let demoPatientId = "anjali_deshpande";
 
-function renderChips() {
-  $("chips").innerHTML = "";
-  demoQuestions.forEach((q) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = q.question;
-    b.onclick = () => { $("question").value = q.question; ask(); };
-    $("chips").appendChild(b);
-  });
+// ---------- patient selection ----------
+
+function currentPatient() {
+  const sel = $("patient-select").value;
+  if (sel === NEW_PATIENT) {
+    return $("new-patient-id").value.trim();
+  }
+  return sel;
 }
+
+function currentPatientName() {
+  return $("patient-select").value === NEW_PATIENT
+    ? $("new-patient-name").value.trim() : "";
+}
+
+async function loadPatients(keepSelection) {
+  const prev = keepSelection ? $("patient-select").value : null;
+  let list = [];
+  try { list = await (await fetch(API + "/patients")).json(); } catch {}
+  const sel = $("patient-select");
+  sel.innerHTML = "";
+  list.forEach((p) => {
+    const o = document.createElement("option");
+    o.value = p.patient_id;
+    o.textContent = p.name ? `${p.name} (${p.patient_id})` : p.patient_id;
+    sel.appendChild(o);
+  });
+  const newOpt = document.createElement("option");
+  newOpt.value = NEW_PATIENT;
+  newOpt.textContent = "+ New patient…";
+  sel.appendChild(newOpt);
+  if (prev && [...sel.options].some((o) => o.value === prev)) sel.value = prev;
+  else if (list.length) sel.value = list[0].patient_id;
+  else sel.value = NEW_PATIENT;
+  onPatientChange();
+}
+
+async function onPatientChange() {
+  const isNew = $("patient-select").value === NEW_PATIENT;
+  $("new-patient-fields").classList.toggle("visible", isNew);
+  $("doc-list").innerHTML = "";
+  if (!isNew) await loadDocuments();
+  loadGraph();
+}
+
+async function loadDocuments() {
+  const pid = currentPatient();
+  if (!pid) return;
+  let docs = [];
+  try { docs = await (await fetch(API + `/patients/${pid}/documents`)).json(); } catch {}
+  const el = $("doc-list");
+  if (!docs.length) {
+    el.innerHTML = `<span style="color:var(--muted)">No documents ingested yet for this patient.</span>`;
+    return;
+  }
+  el.innerHTML = `<table><tr><th>Already ingested (${docs.length})</th><th>When</th></tr>` +
+    docs.map((d) => `<tr><td>${escapeHtml(d.filename)}</td>` +
+      `<td>${(d.ingested_at || "").slice(0, 16).replace("T", " ")}</td></tr>`).join("") +
+    "</table>";
+}
+
+function escapeHtml(s) {
+  const div = document.createElement("div");
+  div.textContent = s ?? "";
+  return div.innerHTML;
+}
+
+$("patient-select").addEventListener("change", onPatientChange);
+
+// ---------- status ----------
 
 function setStatus(text, ok) {
   const pill = $("status-pill");
@@ -167,50 +319,162 @@ async function refreshStatus() {
   try {
     const res = await fetch(API + "/api/status");
     const s = await res.json();
+    demoPatientId = s.demo_patient_id || demoPatientId;
     if (Array.isArray(s.demo_questions) && s.demo_questions.length) {
       demoQuestions = s.demo_questions;
       renderChips();
     }
     if (!s.llm_key_set) setStatus("LLM_API_KEY missing on server", false);
-    else if (!s.ingested) setStatus("No records ingested yet", false);
-    else setStatus("Records ingested ✓", true);
-    if (s.graph_html_available) showGraph();
-    return s;
+    else if (!s.demo_ingested) setStatus("Demo patient not loaded yet", false);
+    else setStatus("Ready ✓", true);
   } catch {
     setStatus("Backend unreachable — is the server running?", false);
-    return null;
   }
 }
 
-function showGraph() {
-  const frame = $("graph-frame");
-  if (frame.hidden) {
-    frame.src = API + "/graph";
-    frame.hidden = false;
-    $("graph-empty").hidden = true;
-  }
-}
+// ---------- seeding / forgetting ----------
 
-$("ingest-btn").onclick = async () => {
-  const btn = $("ingest-btn");
-  btn.disabled = true;
-  btn.textContent = "Ingesting… (takes a few minutes)";
+$("seed-btn").onclick = async () => {
+  const btn = $("seed-btn");
+  btn.disabled = true; btn.textContent = "Ingesting… (takes a few minutes)";
+  showMsg("patient-msg", "Building the demo patient's memory graph…", true);
   try {
-    const res = await fetch(API + "/ingest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ force: false }),
-    });
+    const res = await fetch(API + "/ingest_demo", { method: "POST" });
     const data = await res.json();
-    if (!res.ok) alert(data.error || "Ingestion failed");
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    showMsg("patient-msg", data.skipped
+      ? "Demo patient already ingested — nothing to do."
+      : `Demo patient ingested: ${data.documents} documents, ${data.nodes ?? "?"} nodes, ${data.edges ?? "?"} edges.\n${data.improve || ""}`, true);
   } catch (e) {
-    alert("Ingestion request failed: " + e);
+    showMsg("patient-msg", "Seeding failed: " + e.message, false);
   } finally {
-    btn.disabled = false;
-    btn.textContent = "Ingest records";
+    btn.disabled = false; btn.textContent = "Load synthetic demo patient";
+    await loadPatients(true);
     refreshStatus();
   }
 };
+
+$("forget-btn").onclick = async () => {
+  const pid = currentPatient();
+  if (!pid) return showMsg("patient-msg", "Select a patient first.", false);
+  if (!confirm(`Erase ALL ingested data for '${pid}'? This calls cognee.forget(dataset='${pid}').`)) return;
+  const btn = $("forget-btn");
+  btn.disabled = true;
+  try {
+    const res = await fetch(API + "/forget", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ patient_id: pid }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    showMsg("patient-msg",
+      `Forgotten. ${data.forget_result}\nRegistry rows removed: ${data.registry_rows_removed}`, true);
+  } catch (e) {
+    showMsg("patient-msg", "Forget failed: " + e.message, false);
+  } finally {
+    btn.disabled = false;
+    await loadPatients(false);
+    refreshStatus();
+  }
+};
+
+function showMsg(id, text, ok) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = "msg " + (ok ? "ok" : "err");
+}
+
+// ---------- uploads ----------
+
+async function uploadTo(endpoint, fileInputId, btnId, msgId, busyLabel) {
+  const pid = currentPatient();
+  if (!pid) return showMsg(msgId, "Select or create a patient first.", false);
+  const input = $(fileInputId);
+  if (!input.files.length) return showMsg(msgId, "Choose a file first.", false);
+  const fd = new FormData();
+  fd.append("patient_id", pid);
+  fd.append("patient_name", currentPatientName());
+  fd.append("file", input.files[0]);
+  const btn = $(btnId);
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = busyLabel;
+  showMsg(msgId, "Working… (extraction + graph build makes LLM calls)", true);
+  try {
+    const res = await fetch(API + endpoint, { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    if (data.duplicate) {
+      showMsg(msgId, data.message, true);
+    } else {
+      let m = `Ingested '${data.ingested}'.`;
+      if (data.improve) m += `\n${data.improve}`;
+      showMsg(msgId, m, true);
+    }
+    input.value = "";
+  } catch (e) {
+    showMsg(msgId, "Failed: " + e.message, false);
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+    await loadPatients(true);
+    await loadDocuments();
+    loadGraph(true);
+  }
+}
+
+$("doc-form").onsubmit = (e) => {
+  e.preventDefault();
+  uploadTo("/ingest", "doc-file", "doc-btn", "doc-msg", "Ingesting…");
+};
+
+// Pasted conversation transcript — same pipeline as document upload,
+// different text source (production: speech-to-text output lands here).
+$("transcript-form").onsubmit = async (e) => {
+  e.preventDefault();
+  const pid = currentPatient();
+  if (!pid) return showMsg("transcript-msg", "Select or create a patient first.", false);
+  const text = $("transcript-text").value.trim();
+  if (!text) return showMsg("transcript-msg", "Paste a transcript first.", false);
+  const btn = $("transcript-btn");
+  btn.disabled = true; btn.textContent = "Ingesting…";
+  showMsg("transcript-msg", "Working… (graph build makes LLM calls)", true);
+  try {
+    const res = await fetch(API + "/ingest_transcript", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ patient_id: pid, patient_name: currentPatientName(), text }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    if (data.duplicate) {
+      showMsg("transcript-msg", data.message, true);
+    } else {
+      showMsg("transcript-msg",
+        `Ingested '${data.ingested}'.` + (data.improve ? `\n${data.improve}` : ""), true);
+      $("transcript-text").value = "";
+    }
+  } catch (err) {
+    showMsg("transcript-msg", "Failed: " + err.message, false);
+  } finally {
+    btn.disabled = false; btn.textContent = "Ingest transcript";
+    await loadPatients(true);
+    await loadDocuments();
+    loadGraph(true);
+  }
+};
+
+// ---------- chat ----------
+
+function renderChips() {
+  $("chips").innerHTML = "";
+  demoQuestions.forEach((q) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = q.question;
+    b.onclick = () => { $("question").value = q.question; ask(); };
+    $("chips").appendChild(b);
+  });
+}
 
 function answerCard(question) {
   const card = document.createElement("div");
@@ -225,6 +489,8 @@ function answerCard(question) {
 async function ask() {
   const question = $("question").value.trim();
   if (!question) return;
+  const pid = currentPatient();
+  if (!pid) return alert("Select or create a patient first.");
   const compare = $("compare").checked;
   const card = answerCard(question);
   const graphBody = card.querySelector(".graph-block .body");
@@ -233,7 +499,7 @@ async function ask() {
     const res = await fetch(API + "/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, compare }),
+      body: JSON.stringify({ question, compare, patient_id: pid }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || res.statusText);
@@ -266,9 +532,85 @@ async function ask() {
 
 $("ask-form").onsubmit = (e) => { e.preventDefault(); ask(); };
 
-renderChips();
+// ---------- Doctor's Desk (global, router-driven) ----------
+
+const DESK_EXAMPLES = [
+  "What's on my schedule today?",
+  "When did Anjali Deshpande last visit?",
+  "What documents do we have for Ravi Kumar?",
+];
+
+function renderDeskChips() {
+  const box = $("desk-chips");
+  DESK_EXAMPLES.forEach((q) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = q;
+    b.onclick = () => { $("desk-question").value = q; deskAsk(); };
+    box.appendChild(b);
+  });
+}
+
+async function deskAsk() {
+  const question = $("desk-question").value.trim();
+  if (!question) return;
+  const card = document.createElement("div");
+  card.className = "desk-qa";
+  card.innerHTML = `<div class="q"></div><div class="a"><span class="pending">routing…</span></div>`;
+  card.querySelector(".q").textContent = question;
+  $("desk-answers").prepend(card);
+  $("desk-btn").disabled = true;
+  try {
+    const res = await fetch(API + "/doctor/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    const a = card.querySelector(".a");
+    a.innerHTML = `<span class="route"></span><div class="body"></div>`;
+    a.querySelector(".route").textContent =
+      data.route + (data.patient_id ? " · " + data.patient_id : "");
+    a.querySelector(".body").textContent = data.answer || "(no answer)";
+  } catch (err) {
+    const a = card.querySelector(".a");
+    a.innerHTML = "";
+    a.textContent = "Error: " + err.message;
+    a.classList.add("error");
+  } finally {
+    $("desk-btn").disabled = false;
+  }
+}
+
+$("desk-form").onsubmit = (e) => { e.preventDefault(); deskAsk(); };
+renderDeskChips();
+
+// ---------- graph ----------
+
+function loadGraph(forceRefresh) {
+  const pid = currentPatient();
+  const frame = $("graph-frame");
+  if (!pid) { frame.hidden = true; $("graph-empty").hidden = false; return; }
+  const url = API + `/graph?patient_id=${encodeURIComponent(pid)}` +
+    (forceRefresh ? "&refresh=1" : "") + `&_=${Date.now()}`;
+  fetch(url, { method: "GET" }).then((res) => {
+    if (res.ok) {
+      frame.src = url;
+      frame.hidden = false;
+      $("graph-empty").hidden = true;
+    } else {
+      frame.hidden = true;
+      $("graph-empty").hidden = false;
+    }
+  }).catch(() => {});
+}
+
+// ---------- boot ----------
+
+loadPatients(false);
 refreshStatus();
-setInterval(refreshStatus, 15000);
+setInterval(refreshStatus, 20000);
 </script>
 </body>
 </html>
