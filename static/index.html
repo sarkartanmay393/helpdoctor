@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patient Health Memory</title>
+<style>
+  :root {
+    --bg: #f4f7f9;
+    --panel: #ffffff;
+    --ink: #1c2733;
+    --muted: #5c6b7a;
+    --accent: #0e7c66;       /* clinical green */
+    --accent-soft: #e2f3ef;
+    --baseline: #8a6d1d;
+    --baseline-soft: #faf3dd;
+    --border: #d8e0e7;
+    --danger: #b3372f;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.5;
+  }
+  header {
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    padding: 14px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 1.15rem; }
+  header .sub { color: var(--muted); font-size: .85rem; }
+  #status-pill {
+    margin-left: auto; font-size: .8rem; padding: 4px 12px; border-radius: 999px;
+    background: var(--baseline-soft); color: var(--baseline);
+  }
+  #status-pill.ok { background: var(--accent-soft); color: var(--accent); }
+  #ingest-btn {
+    padding: 6px 14px; border: 1px solid var(--accent); border-radius: 6px;
+    background: var(--accent); color: #fff; font-size: .85rem; cursor: pointer;
+  }
+  #ingest-btn:disabled { opacity: .55; cursor: wait; }
+  main {
+    display: grid; grid-template-columns: minmax(420px, 1fr) minmax(380px, 1fr);
+    gap: 18px; padding: 18px 24px; max-width: 1500px; margin: 0 auto;
+  }
+  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+  section.panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+  }
+  section.panel h2 { font-size: .95rem; margin-bottom: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .chips button {
+    font-size: .78rem; padding: 5px 10px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+    text-align: left;
+  }
+  .chips button:hover { border-color: var(--accent); color: var(--accent); }
+  #ask-form { display: flex; gap: 8px; margin-bottom: 14px; }
+  #question {
+    flex: 1; padding: 10px 12px; font-size: .95rem;
+    border: 1px solid var(--border); border-radius: 8px;
+  }
+  #ask-btn {
+    padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer;
+    background: var(--accent); color: #fff; font-size: .95rem;
+  }
+  #ask-btn:disabled { opacity: .55; cursor: wait; }
+  label.compare { font-size: .8rem; color: var(--muted); display: block; margin: -6px 0 12px; }
+  #answers { display: flex; flex-direction: column; gap: 14px; }
+  .qa { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .qa .q { padding: 10px 14px; font-weight: 600; font-size: .9rem; background: var(--bg); }
+  .qa .block { padding: 12px 14px; font-size: .9rem; white-space: pre-wrap; }
+  .qa .block .tag {
+    display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
+  }
+  .qa .graph-block { border-left: 4px solid var(--accent); }
+  .qa .graph-block .tag { background: var(--accent-soft); color: var(--accent); }
+  .qa .vector-block { border-left: 4px solid var(--baseline); border-top: 1px dashed var(--border); }
+  .qa .vector-block .tag { background: var(--baseline-soft); color: var(--baseline); }
+  .qa .sources { padding: 8px 14px; font-size: .78rem; color: var(--muted); border-top: 1px solid var(--border); }
+  .qa .error { color: var(--danger); }
+  .pending { color: var(--muted); font-style: italic; }
+  #graph-frame { width: 100%; height: 520px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+  #graph-empty { color: var(--muted); font-size: .85rem; padding: 20px 0; }
+  .why ul { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: .88rem; }
+  .why b { color: var(--accent); }
+  .footnote { font-size: .75rem; color: var(--muted); margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Patient Health Memory</h1>
+    <div class="sub">One patient &middot; 3 doctors &middot; 3 cities &middot; 5 scattered records &mdash; connected by a Cognee knowledge graph</div>
+  </div>
+  <span id="status-pill">checking&hellip;</span>
+  <button id="ingest-btn">Ingest records</button>
+</header>
+
+<main>
+  <div style="display:flex; flex-direction:column; gap:18px;">
+    <section class="panel">
+      <h2>Ask about the patient's history</h2>
+      <div class="chips" id="chips"></div>
+      <form id="ask-form">
+        <input id="question" type="text" placeholder="e.g. What condition is the apixaban treating?" autocomplete="off">
+        <button id="ask-btn" type="submit">Ask</button>
+      </form>
+      <label class="compare">
+        <input type="checkbox" id="compare" checked>
+        Also show vector-only RAG baseline (side-by-side comparison)
+      </label>
+      <div id="answers"></div>
+    </section>
+
+    <section class="panel why">
+      <h2>Why this isn't just RAG</h2>
+      <ul>
+        <li><b>Answers come from graph traversal, not single-chunk retrieval.</b>
+            The prescription record never names the patient's condition &mdash; it only points
+            to a discharge summary from a different hospital. Vector search over that chunk
+            can't name the condition; the graph walks the link and can.</li>
+        <li><b>Entities are shared across documents.</b> "Dr. Kulkarni", "the January 2025
+            admission" and "the rhythm disorder" resolve to the same graph nodes whether they
+            appear in a Pune discharge summary, a Mumbai lab report, or a Chennai prescription.</li>
+        <li><b>Time is part of the graph.</b> Ingestion runs temporal extraction, so
+            "what changed after she saw Dr. Menon?" is answered by ordering events, not by
+            hoping the right chunk mentions both dates.</li>
+      </ul>
+      <div class="footnote">Ask the same question with the baseline enabled and compare the two answers live.</div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>The knowledge graph the answers traverse</h2>
+    <iframe id="graph-frame" title="Knowledge graph" hidden></iframe>
+    <div id="graph-empty">Graph not available yet &mdash; run ingestion, then this panel loads automatically.</div>
+    <div class="footnote">All patient data is synthetic and clearly fictional.</div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const API = ""; // same origin; set to "http://localhost:8000" if serving index.html separately
+let demoQuestions = [];
+
+function renderChips() {
+  $("chips").innerHTML = "";
+  demoQuestions.forEach((q) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = q.question;
+    b.onclick = () => { $("question").value = q.question; ask(); };
+    $("chips").appendChild(b);
+  });
+}
+
+function setStatus(text, ok) {
+  const pill = $("status-pill");
+  pill.textContent = text;
+  pill.classList.toggle("ok", !!ok);
+}
+
+async function refreshStatus() {
+  try {
+    const res = await fetch(API + "/api/status");
+    const s = await res.json();
+    if (Array.isArray(s.demo_questions) && s.demo_questions.length) {
+      demoQuestions = s.demo_questions;
+      renderChips();
+    }
+    if (!s.llm_key_set) setStatus("LLM_API_KEY missing on server", false);
+    else if (!s.ingested) setStatus("No records ingested yet", false);
+    else setStatus("Records ingested ✓", true);
+    if (s.graph_html_available) showGraph();
+    return s;
+  } catch {
+    setStatus("Backend unreachable — is the server running?", false);
+    return null;
+  }
+}
+
+function showGraph() {
+  const frame = $("graph-frame");
+  if (frame.hidden) {
+    frame.src = API + "/graph";
+    frame.hidden = false;
+    $("graph-empty").hidden = true;
+  }
+}
+
+$("ingest-btn").onclick = async () => {
+  const btn = $("ingest-btn");
+  btn.disabled = true;
+  btn.textContent = "Ingesting… (takes a few minutes)";
+  try {
+    const res = await fetch(API + "/ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ force: false }),
+    });
+    const data = await res.json();
+    if (!res.ok) alert(data.error || "Ingestion failed");
+  } catch (e) {
+    alert("Ingestion request failed: " + e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Ingest records";
+    refreshStatus();
+  }
+};
+
+function answerCard(question) {
+  const card = document.createElement("div");
+  card.className = "qa";
+  card.innerHTML = `<div class="q"></div>
+    <div class="block graph-block"><span class="tag">Graph answer</span><div class="body pending">thinking…</div></div>`;
+  card.querySelector(".q").textContent = question;
+  $("answers").prepend(card);
+  return card;
+}
+
+async function ask() {
+  const question = $("question").value.trim();
+  if (!question) return;
+  const compare = $("compare").checked;
+  const card = answerCard(question);
+  const graphBody = card.querySelector(".graph-block .body");
+  $("ask-btn").disabled = true;
+  try {
+    const res = await fetch(API + "/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, compare }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+
+    graphBody.classList.remove("pending");
+    graphBody.textContent = data.graph_answer || "(no answer returned)";
+
+    if (compare) {
+      const vec = document.createElement("div");
+      vec.className = "block vector-block";
+      vec.innerHTML = `<span class="tag">Vector-only baseline</span><div class="body"></div>`;
+      vec.querySelector(".body").textContent =
+        data.vector_answer || "(baseline unavailable)";
+      card.appendChild(vec);
+    }
+    if (Array.isArray(data.sources) && data.sources.length) {
+      const src = document.createElement("div");
+      src.className = "sources";
+      src.textContent = "Sources: " + data.sources.join(", ");
+      card.appendChild(src);
+    }
+  } catch (e) {
+    graphBody.classList.remove("pending");
+    graphBody.classList.add("error");
+    graphBody.textContent = "Error: " + e.message;
+  } finally {
+    $("ask-btn").disabled = false;
+  }
+}
+
+$("ask-form").onsubmit = (e) => { e.preventDefault(); ask(); };
+
+renderChips();
+refreshStatus();
+setInterval(refreshStatus, 15000);
+</script>
+</body>
+</html>
