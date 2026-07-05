@@ -14,6 +14,7 @@ import time
 
 import cognee_setup  # must come before `import cognee` (sets env vars)
 from cognee_setup import (
+    COGNEE_CLOUD_ENABLED,
     DEMO_PATIENT_ID,
     DEMO_PATIENT_NAME,
     DOCUMENTS_DIR,
@@ -38,6 +39,10 @@ async def ensure_db_setup() -> None:
 
 
 async def dataset_exists(patient_id: str) -> bool:
+    if COGNEE_CLOUD_ENABLED:
+        from cloud import cloud_dataset_exists
+
+        return await cloud_dataset_exists(patient_id)
     await ensure_db_setup()
     datasets = await cognee.datasets.list_datasets()
     return any(d.name == patient_id for d in datasets)
@@ -90,9 +95,25 @@ async def run_improve(patient_id: str) -> str:
     one — its output is surfaced in the terminal and the /ingest response.
     """
     started = time.monotonic()
-    result = await cognee.improve(dataset=patient_id)
+    if COGNEE_CLOUD_ENABLED:
+        from cloud import cloud_improve
+
+        try:
+            result = await cloud_improve(patient_id)
+        except Exception as exc:
+            # Some hosted tenants don't expose /api/v1/improve; their
+            # remember() already runs the refinement server-side.
+            summary = (f"improve(dataset='{patient_id}') [cloud] not exposed "
+                       f"by this tenant — refinement runs inside cloud "
+                       f"remember(). ({exc})")
+            print(f"  {summary}")
+            return summary
+    else:
+        result = await cognee.improve(dataset=patient_id)
     elapsed = time.monotonic() - started
-    summary = f"improve(dataset='{patient_id}') completed in {elapsed:.1f}s: {result!r}"
+    where = "cloud" if COGNEE_CLOUD_ENABLED else "local"
+    summary = (f"improve(dataset='{patient_id}') [{where}] completed in "
+               f"{elapsed:.1f}s: {result!r}")
     print(f"  {summary}")
     return summary
 
@@ -104,15 +125,22 @@ async def remember_text(patient_id: str, text: str, filename: str,
     `digest` is the content hash the caller deduped on (the raw uploaded
     bytes); it defaults to the text's own hash when not given.
     """
-    await ensure_db_setup()
     registry.ensure_patient(patient_id)
     started = time.monotonic()
-    await cognee.remember(
-        text,
-        dataset_name=patient_id,
-        temporal_cognify=True,  # routed through to cognify() by remember()
-        self_improvement=False,  # improve() is called explicitly instead
-    )
+    if COGNEE_CLOUD_ENABLED:
+        # Same verb, hosted execution — the slow LLM graph extraction runs
+        # on Cognee Cloud instead of this machine.
+        from cloud import cloud_remember_text
+
+        await cloud_remember_text(patient_id, text)
+    else:
+        await ensure_db_setup()
+        await cognee.remember(
+            text,
+            dataset_name=patient_id,
+            temporal_cognify=True,  # routed through to cognify() by remember()
+            self_improvement=False,  # improve() is called explicitly instead
+        )
     remember_seconds = round(time.monotonic() - started, 1)
     registry.record_document(
         patient_id, filename, digest or registry.content_hash(text.encode()))
@@ -125,15 +153,26 @@ async def remember_text(patient_id: str, text: str, filename: str,
 
 async def run_ingestion(force: bool = False) -> dict:
     """Seed the demo patient from data/patient_records/ (idempotent)."""
-    require_llm_key()
-    await ensure_db_setup()
+    if not COGNEE_CLOUD_ENABLED:
+        require_llm_key()  # cloud mode brings its own LLM on the hosted side
+        await ensure_db_setup()
 
     if force:
-        print("Force mode: pruning existing cognee data and system state...")
-        await cognee.prune.prune_data()
-        await cognee.prune.prune_system(metadata=True)
-        registry.forget_patient(DEMO_PATIENT_ID)
-        await ensure_db_setup()
+        if COGNEE_CLOUD_ENABLED:
+            from cloud import cloud_forget
+
+            print("Force mode: forgetting the demo dataset on Cognee Cloud...")
+            try:
+                await cloud_forget(DEMO_PATIENT_ID)
+            except Exception as exc:
+                print(f"  (cloud forget skipped: {exc})")
+            registry.forget_patient(DEMO_PATIENT_ID)
+        else:
+            print("Force mode: pruning existing cognee data and system state...")
+            await cognee.prune.prune_data()
+            await cognee.prune.prune_system(metadata=True)
+            registry.forget_patient(DEMO_PATIENT_ID)
+            await ensure_db_setup()
 
     registry.ensure_patient(DEMO_PATIENT_ID, DEMO_PATIENT_NAME)
 
@@ -151,11 +190,12 @@ async def run_ingestion(force: bool = False) -> dict:
     if not new_paths:
         print(f"All documents in {DOCUMENTS_DIR} already ingested for "
               f"'{DEMO_PATIENT_ID}' — nothing to do.")
-        counts = await graph_counts()
-        if counts:
-            print(f"Existing graph: {counts[0]} nodes, {counts[1]} edges.")
-        if not graph_html_path(DEMO_PATIENT_ID).exists():
-            await export_graph_html(DEMO_PATIENT_ID)
+        if not COGNEE_CLOUD_ENABLED:
+            counts = await graph_counts()
+            if counts:
+                print(f"Existing graph: {counts[0]} nodes, {counts[1]} edges.")
+            if not graph_html_path(DEMO_PATIENT_ID).exists():
+                await export_graph_html(DEMO_PATIENT_ID)
         return {"skipped": True}
 
     print(f"remember(): ingesting {len(new_paths)} documents for patient "
@@ -166,29 +206,41 @@ async def run_ingestion(force: bool = False) -> dict:
     # Lifecycle verb 1: remember == add() + cognify() in permanent-memory
     # mode. temporal_cognify=True extracts dates/events into a time-aware
     # graph, enabling "what happened after X" queries.
-    print("This makes LLM calls — expect a few minutes...")
-    await cognee.remember(
-        new_paths,
-        dataset_name=DEMO_PATIENT_ID,
-        temporal_cognify=True,
-        self_improvement=False,
-    )
     from pathlib import Path
 
-    for path_str in new_paths:
-        p = Path(path_str)
-        registry.record_document(DEMO_PATIENT_ID, p.name, registry.hash_file(p))
+    counts = None
+    if COGNEE_CLOUD_ENABLED:
+        from cloud import cloud_remember_text
 
-    counts = await graph_counts()
-    if counts:
-        print(f"Knowledge graph built: {counts[0]} nodes, {counts[1]} edges.")
-        if counts[0] < 10:
-            print("  WARNING: suspiciously small graph — check the LLM output.")
+        print("Cloud mode: remember() runs on Cognee Cloud, one document at a time...")
+        for path_str in new_paths:
+            p = Path(path_str)
+            await cloud_remember_text(DEMO_PATIENT_ID, p.read_text())
+            registry.record_document(DEMO_PATIENT_ID, p.name, registry.hash_file(p))
+            print(f"  cloud-remembered {p.name}")
+    else:
+        print("This makes LLM calls — expect a few minutes...")
+        await cognee.remember(
+            new_paths,
+            dataset_name=DEMO_PATIENT_ID,
+            temporal_cognify=True,
+            self_improvement=False,
+        )
+        for path_str in new_paths:
+            p = Path(path_str)
+            registry.record_document(DEMO_PATIENT_ID, p.name, registry.hash_file(p))
+
+        counts = await graph_counts()
+        if counts:
+            print(f"Knowledge graph built: {counts[0]} nodes, {counts[1]} edges.")
+            if counts[0] < 10:
+                print("  WARNING: suspiciously small graph — check the LLM output.")
 
     # Lifecycle verb 3: explicit, logged improve() pass.
     improve_log = await run_improve(DEMO_PATIENT_ID)
 
-    await export_graph_html(DEMO_PATIENT_ID)
+    if not COGNEE_CLOUD_ENABLED:  # the graph HTML renders from the local DB
+        await export_graph_html(DEMO_PATIENT_ID)
     print("Ingestion complete.")
     return {
         "skipped": False,

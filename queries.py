@@ -6,7 +6,7 @@ import sys
 from typing import Any
 
 import cognee_setup  # must come before `import cognee` (sets env vars)
-from cognee_setup import DEMO_PATIENT_ID, require_llm_key
+from cognee_setup import COGNEE_CLOUD_ENABLED, DEMO_PATIENT_ID, require_llm_key
 
 import cognee
 from cognee import SearchType
@@ -155,15 +155,24 @@ async def ask_graph(question: str, patient_id: str = DEMO_PATIENT_ID) -> tuple[s
     retrieval misses even at top_k=50 — verified empirically. Costs ~40-70s;
     the accuracy is the demo.
     """
-    results = await cognee.recall(
-        question,
-        query_type=SearchType.GRAPH_COMPLETION_COT,
-        datasets=[patient_id],
-        top_k=30,
-        retriever_specific_config={"max_iter": 2},
-        system_prompt=GROUNDED_PROMPT,
-        include_references=True,
-    )
+    if COGNEE_CLOUD_ENABLED:
+        # Same recall, hosted execution. The cloud API doesn't accept
+        # retriever_specific_config, so COT runs with server defaults.
+        from cloud import cloud_recall
+
+        results = await cloud_recall(
+            question, patient_id, "GRAPH_COMPLETION_COT",
+            top_k=30, system_prompt=GROUNDED_PROMPT, include_references=True)
+    else:
+        results = await cognee.recall(
+            question,
+            query_type=SearchType.GRAPH_COMPLETION_COT,
+            datasets=[patient_id],
+            top_k=30,
+            retriever_specific_config={"max_iter": 2},
+            system_prompt=GROUNDED_PROMPT,
+            include_references=True,
+        )
     return unpack_search_results(results)
 
 
@@ -175,13 +184,20 @@ async def ask_vector_baseline(question: str, patient_id: str = DEMO_PATIENT_ID) 
     context, which neither scales nor resembles production vector RAG —
     the point of the comparison is what retrieval alone finds.
     """
-    results = await cognee.recall(
-        question,
-        query_type=SearchType.RAG_COMPLETION,
-        datasets=[patient_id],
-        top_k=3,
-        system_prompt=GROUNDED_PROMPT,
-    )
+    if COGNEE_CLOUD_ENABLED:
+        from cloud import cloud_recall
+
+        results = await cloud_recall(
+            question, patient_id, "RAG_COMPLETION",
+            top_k=3, system_prompt=GROUNDED_PROMPT)
+    else:
+        results = await cognee.recall(
+            question,
+            query_type=SearchType.RAG_COMPLETION,
+            datasets=[patient_id],
+            top_k=3,
+            system_prompt=GROUNDED_PROMPT,
+        )
     answer, _ = unpack_search_results(results)
     return answer
 

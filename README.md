@@ -99,6 +99,29 @@ With it off, all datasets share one graph and we verified patient B's
 questions were answered from patient A's records; with it on, each dataset
 gets its own databases and cross-patient questions correctly return nothing.
 
+## Optional: Cognee Cloud mode
+
+Local mode is the default (Open Source track). If local ingestion is too
+slow — graph extraction makes several LLM calls per document — set in `.env`:
+
+```bash
+COGNEE_CLOUD=true
+COGNEE_BASE_URL=https://<your-tenant>.aws.cognee.ai
+COGNEE_API_KEY=...
+```
+
+The same four lifecycle verbs then execute on the hosted instance via
+cognee's `CloudClient` (measured: `remember()` ~18s vs 1–4 min locally,
+`recall()` ~5s). `LLM_API_KEY` is not needed in this mode. Trade-offs: the
+graph visualization panel only renders in local mode, and cloud `recall()`
+runs with the server's default chain-of-thought settings (and is pinned to
+`scope="graph"` so the hosted per-user session cache can never bleed
+answers across patients — verified). The patient registry stays local
+either way, but the graphs do not follow you across modes: after switching,
+re-seed with `uv run python ingest.py` (dedup uses the local registry, so
+run `--force` or forget the patient first when re-seeding the same
+documents into the other store).
+
 ## The demo, in 30 seconds
 
 Nine fictional documents follow one patient across 18 months and three

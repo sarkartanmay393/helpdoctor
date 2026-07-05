@@ -49,6 +49,25 @@ if not os.environ.get("LLM_API_KEY") and os.environ.get("OPENAI_API_KEY"):
 # is plenty for this corpus. Dimensions auto-derive from the model name.
 os.environ.setdefault("EMBEDDING_MODEL", "openai/text-embedding-3-small")
 
+# --- Optional Cognee Cloud mode -------------------------------------------
+# COGNEE_CLOUD=true routes remember/recall/improve/forget through a hosted
+# Cognee instance (cognee's own CloudClient, X-Api-Key auth) instead of the
+# local in-process engine — offloads the slow LLM graph extraction.
+# Accepted aliases for the connection settings:
+#   url: COGNEE_BASE_URL | COGNEE_API_URL | COGNEE_SERVICE_URL
+#   key: COGNEE_API_KEY  | COGNEE_KEY
+COGNEE_CLOUD_ENABLED = os.environ.get("COGNEE_CLOUD", "").strip().lower() in (
+    "1", "true", "yes", "on")
+COGNEE_CLOUD_URL = (os.environ.get("COGNEE_BASE_URL")
+                    or os.environ.get("COGNEE_API_URL")
+                    or os.environ.get("COGNEE_SERVICE_URL") or "").strip()
+COGNEE_CLOUD_KEY = (os.environ.get("COGNEE_API_KEY")
+                    or os.environ.get("COGNEE_KEY") or "").strip()
+if COGNEE_CLOUD_ENABLED and not (COGNEE_CLOUD_URL and COGNEE_CLOUD_KEY):
+    raise SystemExit(
+        "COGNEE_CLOUD=true but the connection is incomplete. Set "
+        "COGNEE_BASE_URL and COGNEE_API_KEY in .env (see .env.example).")
+
 # Per-patient partitioning (cognee 1.2.2 lifecycle API):
 # The hackathon plan was remember(..., session_id=patient_id), but in the
 # installed version session_id selects the *conversation session cache*

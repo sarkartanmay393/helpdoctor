@@ -279,6 +279,7 @@ async function onPatientChange() {
   const isNew = $("patient-select").value === NEW_PATIENT;
   $("new-patient-fields").classList.toggle("visible", isNew);
   $("doc-list").innerHTML = "";
+  renderChips();
   if (!isNew) await loadDocuments();
   loadGraph();
 }
@@ -324,9 +325,14 @@ async function refreshStatus() {
       demoQuestions = s.demo_questions;
       renderChips();
     }
+    const mode = s.mode === "cloud" ? " · Cognee Cloud" : " · local";
     if (!s.llm_key_set) setStatus("LLM_API_KEY missing on server", false);
-    else if (!s.demo_ingested) setStatus("Demo patient not loaded yet", false);
-    else setStatus("Ready ✓", true);
+    else if (!s.demo_ingested) setStatus("Demo patient not loaded yet" + mode, false);
+    else setStatus("Ready ✓" + mode, true);
+    if (s.mode === "cloud") {
+      $("graph-empty").textContent =
+        "Graph visualization is local-mode only — in cloud mode the graph lives on Cognee Cloud.";
+    }
   } catch {
     setStatus("Backend unreachable — is the server running?", false);
   }
@@ -489,6 +495,10 @@ $("transcript-form").onsubmit = async (e) => {
 
 function renderChips() {
   $("chips").innerHTML = "";
+  // The canned questions are about the demo patient — showing them while
+  // another patient is selected invites asking Anjali questions against
+  // the wrong patient's (possibly empty) graph.
+  if (currentPatient() !== demoPatientId) return;
   demoQuestions.forEach((q) => {
     const b = document.createElement("button");
     b.type = "button";
@@ -517,6 +527,14 @@ async function ask() {
   const card = answerCard(question);
   const graphBody = card.querySelector(".graph-block .body");
   $("ask-btn").disabled = true;
+  // Chain-of-thought graph search = several sequential LLM calls; show the
+  // elapsed time so ~1 minute of real work doesn't look like a hang.
+  const t0 = Date.now();
+  const ticker = setInterval(() => {
+    const s = Math.round((Date.now() - t0) / 1000);
+    graphBody.textContent =
+      `reasoning over the graph… ${s}s (multi-hop chain-of-thought, ~40–90s)`;
+  }, 1000);
   try {
     const res = await fetch(API + "/ask", {
       method: "POST",
@@ -524,6 +542,7 @@ async function ask() {
       body: JSON.stringify({ question, compare, patient_id: pid }),
     });
     const data = await res.json();
+    clearInterval(ticker);
     if (!res.ok) throw new Error(data.error || res.statusText);
 
     graphBody.classList.remove("pending");
@@ -544,6 +563,7 @@ async function ask() {
       card.appendChild(src);
     }
   } catch (e) {
+    clearInterval(ticker);
     graphBody.classList.remove("pending");
     graphBody.classList.add("error");
     graphBody.textContent = "Error: " + e.message;
@@ -582,6 +602,15 @@ async function deskAsk() {
   card.querySelector(".q").textContent = question;
   $("desk-answers").prepend(card);
   $("desk-btn").disabled = true;
+  // sql/seed_data routes answer in <1s; only recall-routed clinical
+  // questions run the slow chain-of-thought, so the ticker mostly shows
+  // for those.
+  const t0 = Date.now();
+  const ticker = setInterval(() => {
+    const s = Math.round((Date.now() - t0) / 1000);
+    card.querySelector(".a").textContent =
+      `recall route: reasoning over the patient's graph… ${s}s`;
+  }, 1500);
   try {
     const res = await fetch(API + "/doctor/ask", {
       method: "POST",
@@ -589,6 +618,7 @@ async function deskAsk() {
       body: JSON.stringify({ question }),
     });
     const data = await res.json();
+    clearInterval(ticker);
     if (!res.ok) throw new Error(data.error || res.statusText);
     const a = card.querySelector(".a");
     a.innerHTML = `<span class="route"></span><div class="body"></div>`;
@@ -596,6 +626,7 @@ async function deskAsk() {
       data.route + (data.patient_id ? " · " + data.patient_id : "");
     a.querySelector(".body").textContent = data.answer || "(no answer)";
   } catch (err) {
+    clearInterval(ticker);
     const a = card.querySelector(".a");
     a.innerHTML = "";
     a.textContent = "Error: " + err.message;

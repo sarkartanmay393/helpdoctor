@@ -4,7 +4,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import cognee_setup  # must come before `import cognee` (sets env vars)
-from cognee_setup import DEMO_PATIENT_ID, PROJECT_ROOT, graph_html_path
+from cognee_setup import (
+    COGNEE_CLOUD_ENABLED,
+    DEMO_PATIENT_ID,
+    PROJECT_ROOT,
+    graph_html_path,
+)
 
 import cognee
 from fastapi import FastAPI, File, Form, UploadFile
@@ -56,6 +61,8 @@ class DoctorAskRequest(BaseModel):
 
 
 def _llm_key_missing_response() -> JSONResponse | None:
+    if COGNEE_CLOUD_ENABLED:
+        return None  # cloud mode: the hosted side brings its own LLM
     if not os.environ.get("LLM_API_KEY"):
         return JSONResponse(
             status_code=503,
@@ -174,7 +181,8 @@ async def status() -> dict:
     except Exception:
         demo_ingested = False
     return {
-        "llm_key_set": bool(os.environ.get("LLM_API_KEY")),
+        "llm_key_set": bool(os.environ.get("LLM_API_KEY")) or COGNEE_CLOUD_ENABLED,
+        "mode": "cloud" if COGNEE_CLOUD_ENABLED else "local",
         "demo_patient_id": DEMO_PATIENT_ID,
         "demo_ingested": demo_ingested,
         "demo_questions": DEMO_QUESTIONS,
@@ -370,9 +378,14 @@ async def forget(body: ForgetRequest):
     if not pid:
         return JSONResponse(status_code=400, content={"error": "Empty patient id."})
     try:
-        await ensure_db_setup()
         try:
-            result = await cognee.forget(dataset=pid)
+            if COGNEE_CLOUD_ENABLED:
+                from cloud import cloud_forget
+
+                result = await cloud_forget(pid)
+            else:
+                await ensure_db_setup()
+                result = await cognee.forget(dataset=pid)
         except Exception as exc:
             # Dataset may not exist in cognee (e.g. registry-only patient).
             result = f"(cognee dataset not deleted: {exc})"
@@ -389,6 +402,13 @@ async def forget(body: ForgetRequest):
 
 @app.get("/graph")
 async def graph(patient_id: str = DEMO_PATIENT_ID, refresh: bool = False):
+    if COGNEE_CLOUD_ENABLED:
+        # The HTML export renders from the local graph database; in cloud
+        # mode the graph lives on the hosted instance.
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Graph visualization is available in local "
+                              "mode only (COGNEE_CLOUD=false)."})
     pid = _clean_patient_id(patient_id) or DEMO_PATIENT_ID
     html = graph_html_path(pid)
     if (refresh or not html.exists()) and await dataset_exists(pid):
