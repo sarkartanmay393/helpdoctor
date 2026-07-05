@@ -348,9 +348,13 @@ $("seed-btn").onclick = async () => {
     const res = await fetch(API + "/ingest_demo", { method: "POST" });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || res.statusText);
+    // nodes/edges counts only exist in local mode (the cloud graph lives
+    // on the hosted tenant) — omit them rather than show "? nodes".
+    const counts = (data.nodes != null && data.edges != null)
+      ? `, ${data.nodes} nodes, ${data.edges} edges` : "";
     showMsg("patient-msg", data.skipped
       ? "Demo patient already ingested — nothing to do."
-      : `Demo patient ingested: ${data.documents} documents, ${data.nodes ?? "?"} nodes, ${data.edges ?? "?"} edges.\n${data.improve || ""}`, true);
+      : `Demo patient ingested: ${data.documents} documents${counts}.\n${data.improve || ""}`, true);
   } catch (e) {
     showMsg("patient-msg", "Seeding failed: " + e.message, false);
   } finally {
@@ -533,7 +537,7 @@ async function ask() {
   const ticker = setInterval(() => {
     const s = Math.round((Date.now() - t0) / 1000);
     graphBody.textContent =
-      `reasoning over the graph… ${s}s (multi-hop chain-of-thought, ~40–90s)`;
+      `reasoning over the graph… ${s}s (~10–20s on cloud, up to ~90s locally)`;
   }, 1000);
   try {
     const res = await fetch(API + "/ask", {

@@ -156,12 +156,15 @@ async def ask_graph(question: str, patient_id: str = DEMO_PATIENT_ID) -> tuple[s
     the accuracy is the demo.
     """
     if COGNEE_CLOUD_ENABLED:
-        # Same recall, hosted execution. The cloud API doesn't accept
-        # retriever_specific_config, so COT runs with server defaults.
+        # Single-shot GRAPH_COMPLETION on cloud: the hosted ingestion runs
+        # its own refinement inside remember(), and we verified the fast
+        # mode answers the multi-hop demo questions correctly there in
+        # ~12s — chain-of-thought (~40-90s) is only needed for the local
+        # graph, where single-shot provably misses the cross-document hop.
         from cloud import cloud_recall
 
         results = await cloud_recall(
-            question, patient_id, "GRAPH_COMPLETION_COT",
+            question, patient_id, "GRAPH_COMPLETION",
             top_k=30, system_prompt=GROUNDED_PROMPT, include_references=True)
     else:
         results = await cognee.recall(

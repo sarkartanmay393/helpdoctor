@@ -102,12 +102,11 @@ async def run_improve(patient_id: str) -> str:
             result = await cloud_improve(patient_id)
         except Exception as exc:
             # Some hosted tenants don't expose /api/v1/improve; their
-            # remember() already runs the refinement server-side.
-            summary = (f"improve(dataset='{patient_id}') [cloud] not exposed "
-                       f"by this tenant — refinement runs inside cloud "
-                       f"remember(). ({exc})")
-            print(f"  {summary}")
-            return summary
+            # remember() already runs the refinement server-side. Log the
+            # raw error server-side, return a clean line for the UI.
+            print(f"  cloud improve unavailable ({exc})")
+            return ("improve(): handled inside cloud remember() on this "
+                    "tenant (no separate refinement pass needed).")
     else:
         result = await cognee.improve(dataset=patient_id)
     elapsed = time.monotonic() - started
@@ -138,7 +137,6 @@ async def remember_text(patient_id: str, text: str, filename: str,
         await cognee.remember(
             text,
             dataset_name=patient_id,
-            temporal_cognify=True,  # routed through to cognify() by remember()
             self_improvement=False,  # improve() is called explicitly instead
         )
     remember_seconds = round(time.monotonic() - started, 1)
@@ -153,6 +151,7 @@ async def remember_text(patient_id: str, text: str, filename: str,
 
 async def run_ingestion(force: bool = False) -> dict:
     """Seed the demo patient from data/patient_records/ (idempotent)."""
+    
     if not COGNEE_CLOUD_ENABLED:
         require_llm_key()  # cloud mode brings its own LLM on the hosted side
         await ensure_db_setup()
@@ -186,6 +185,18 @@ async def run_ingestion(force: bool = False) -> dict:
         if registry.document_exists(DEMO_PATIENT_ID, digest):
             continue
         new_paths.append(path_str)
+
+    if not new_paths:
+        # Registry says everything is ingested — verify the active store
+        # agrees. On shared cloud tenants data can be wiped underneath us;
+        # the registry is a lookup index only, Cognee is the source of
+        # truth, so when they disagree we re-seed instead of skipping.
+        if not await dataset_exists(DEMO_PATIENT_ID):
+            print("Registry says ingested, but the active store has no "
+                  "dataset — re-seeding (store was likely wiped/reset).")
+            registry.forget_patient(DEMO_PATIENT_ID)
+            registry.ensure_patient(DEMO_PATIENT_ID, DEMO_PATIENT_NAME)
+            new_paths = document_paths()
 
     if not new_paths:
         print(f"All documents in {DOCUMENTS_DIR} already ingested for "
@@ -223,7 +234,6 @@ async def run_ingestion(force: bool = False) -> dict:
         await cognee.remember(
             new_paths,
             dataset_name=DEMO_PATIENT_ID,
-            temporal_cognify=True,
             self_improvement=False,
         )
         for path_str in new_paths:

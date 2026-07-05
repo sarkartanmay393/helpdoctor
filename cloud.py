@@ -16,6 +16,18 @@ Differences from local mode, by design:
 
 from cognee_setup import COGNEE_CLOUD_KEY, COGNEE_CLOUD_URL
 
+# The shared hackathon tenant holds a corrupted "anjali_deshpande" dataset
+# (every write AND delete to it 500s server-side — likely damaged during a
+# tenant wipe). It cannot be removed from the client, so the demo patient is
+# remapped to a fresh dataset name on the CLOUD SIDE ONLY. Local mode and
+# the UI keep using the plain patient id.
+_CLOUD_DATASET_ALIASES = {"anjali_deshpande": "anjali_deshpande_v2"}
+
+
+def _ds(patient_id: str) -> str:
+    return _CLOUD_DATASET_ALIASES.get(patient_id, patient_id)
+
+
 _client = None
 
 
@@ -33,7 +45,7 @@ async def cloud_health() -> bool:
 
 
 async def cloud_remember_text(patient_id: str, text: str) -> dict:
-    return await get_client().remember(text, dataset_name=patient_id)
+    return await get_client().remember(text, dataset_name=_ds(patient_id))
 
 
 async def cloud_recall(question: str, patient_id: str, query_type: str,
@@ -46,7 +58,7 @@ async def cloud_recall(question: str, patient_id: str, query_type: str,
     return await get_client().recall(
         question,
         query_type=query_type,
-        datasets=[patient_id],
+        datasets=[_ds(patient_id)],
         top_k=top_k,
         system_prompt=system_prompt,
         include_references=include_references,
@@ -55,11 +67,11 @@ async def cloud_recall(question: str, patient_id: str, query_type: str,
 
 
 async def cloud_improve(patient_id: str) -> dict:
-    return await get_client().improve(dataset=patient_id)
+    return await get_client().improve(dataset=_ds(patient_id))
 
 
 async def cloud_forget(patient_id: str) -> dict:
-    return await get_client().forget(dataset=patient_id)
+    return await get_client().forget(dataset=_ds(patient_id))
 
 
 async def cloud_dataset_exists(patient_id: str) -> bool:
@@ -71,6 +83,6 @@ async def cloud_dataset_exists(patient_id: str) -> bool:
         datasets = await resp.json()
     for d in datasets if isinstance(datasets, list) else []:
         name = d.get("name") if isinstance(d, dict) else None
-        if name == patient_id:
+        if name == _ds(patient_id):
             return True
     return False

@@ -111,16 +111,23 @@ COGNEE_API_KEY=...
 ```
 
 The same four lifecycle verbs then execute on the hosted instance via
-cognee's `CloudClient` (measured: `remember()` ~18s vs 1–4 min locally,
-`recall()` ~5s). `LLM_API_KEY` is not needed in this mode. Trade-offs: the
-graph visualization panel only renders in local mode, and cloud `recall()`
-runs with the server's default chain-of-thought settings (and is pinned to
-`scope="graph"` so the hosted per-user session cache can never bleed
-answers across patients — verified). The patient registry stays local
-either way, but the graphs do not follow you across modes: after switching,
-re-seed with `uv run python ingest.py` (dedup uses the local registry, so
-run `--force` or forget the patient first when re-seeding the same
-documents into the other store).
+cognee's `CloudClient` (measured: `remember()` ~10–20s vs 1–4 min locally;
+`/ask` ~11s vs 40–100s). Cloud `recall()` uses single-shot GRAPH_COMPLETION —
+the hosted ingestion runs its own refinement, and we verified the fast mode
+answers the multi-hop demo questions correctly there, while the local graph
+needs chain-of-thought. It is also pinned to `scope="graph"` so the hosted
+per-user session cache can never bleed answers across patients (verified).
+`LLM_API_KEY` is not needed in this mode; the graph visualization panel only
+renders in local mode. Graphs do not follow you across modes: after
+switching, re-seed with `uv run python ingest.py` (the registry tracks
+local/cloud ingestions separately and auto-heals if a cloud tenant is wiped).
+
+**Registry persistence when hosted:** in cloud mode, setting
+`DB_HOST`/`DB_USER`/`DB_PASSWORD`/`DB_DATABASE` moves the patient registry
+to MySQL (AWS RDS, TLS via the committed `global-bundle.pem`) so redeploys
+keep their patient list; without them — or if the DB is unreachable, e.g.
+an RDS security group that only allows the host — it warns once and uses
+the local `patients.db`.
 
 ## The demo, in 30 seconds
 
