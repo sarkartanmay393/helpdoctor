@@ -2,17 +2,23 @@
 
 **The problem.** In Indian healthcare, a patient's records are scattered
 across hospitals, family physicians, labs, and specialists in different
-cities, with no continuity of care — no single doctor ever sees the whole
-story, and the patient owns none of it.
+cities, with no continuity of care — a doctor's office starts every visit
+with an incomplete picture, and the patient has no usable access to their
+own history.
 
-**The solution.** Patient Health Memory gives each patient their own
-**patient-owned memory graph** built on [Cognee](https://github.com/topoteretes/cognee).
-Any doctor can contribute a record (a discharge summary, a lab report, a
-prescription PDF, or a consultation transcript), but the memory belongs to
-the patient: it is queryable by them in plain language and erasable by them
-with one call. In production, this ingests transcribed doctor-patient audio
-via speech-to-text; this demo shows the ingestion path directly via a pasted
-transcript.
+**The solution.** Patient Health Memory is a **memory layer for a doctor's
+office**, built on [Cognee](https://github.com/topoteretes/cognee). The
+office records everything about a patient in one place: after each visit,
+the front desk uploads incoming documents (discharge summaries, lab
+reports, prescription PDFs) and the consultation transcript, and each one
+is ingested into that patient's own knowledge graph. In production, the
+transcripts come from speech-to-text on doctor-patient audio; this demo
+shows the ingestion path directly via a pasted transcript. Inside the
+office, a **Doctor's Desk** chat answers questions across the whole patient
+registry. And the office exposes a **patient-access API**: each patient can
+query their own records in plain language through endpoints strictly scoped
+to their own graph, and can have the office erase their data with one
+`forget()` call.
 
 **Why Cognee's graph layer specifically.** Entities like a doctor, an
 admission, or a diagnosis become shared graph nodes across documents from
@@ -74,7 +80,8 @@ The pipeline uses all four lifecycle verbs of cognee 1.2.2:
   (with `self_improvement=False` on remember, so the refinement pass is a
   single visible, logged step).
 - **`forget(dataset=patient_id)`** — wired to the "Forget this patient's
-  data" button in the UI: patient-initiated erasure of their whole graph.
+  data" button in the UI: when a patient asks the office to delete their
+  data, one call erases their entire graph.
 
 **Note on `session_id`:** the original plan was to partition patients by
 `remember(..., session_id=...)`, but in the installed cognee 1.2.2,
@@ -118,8 +125,11 @@ fibrillation` and answers correctly, with sources.
   hardcoded demo schedule answer instantly without an LLM; free-form clinical
   questions about a named patient route to `recall()` scoped to that patient.
   No booking, no calendar, no cross-patient aggregate reasoning.
-- **Backend:** FastAPI ([server.py](server.py)) — `/patients`,
-  `/patients/{id}/documents`, `/ingest` (multipart, hash-dedup),
-  `/ingest_transcript` (pasted conversation, same pipeline + dedup),
-  `/ask`, `/doctor/ask`, `/forget`, `/graph`.
+- **Backend:** FastAPI ([server.py](server.py)). Office-side endpoints:
+  `/ingest` (multipart, hash-dedup), `/ingest_transcript` (pasted
+  conversation, same pipeline + dedup), `/doctor/ask`, `/patients`.
+  Patient-access API (each call scoped to one patient's graph):
+  `/ask`, `/patients/{id}/documents`, `/graph?patient_id=...`, `/forget`.
+  The isolation behind that scoping is enforced by cognee's access control
+  (see the note above) and was verified empirically.
 - **Frontend:** one static [index.html](static/index.html), vanilla JS, no build step.
