@@ -1,0 +1,36 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, clinic, or medical record is
+# represented. Do not use for clinical purposes.
+
+ARIHANT ORTHOPAEDIC CLINIC, DADAR, MUMBAI
+OUTPATIENT CONSULTATION NOTE
+
+Patient Name: Mrs. Anjali Deshpande
+Age / Sex: 58 years / Female
+Date of Visit: 3 August 2025
+Consultant: Dr. Farhan Qureshi, MS (Orthopaedics)
+
+COMPLAINT
+Twisted her right ankle on staircase two days ago; pain and swelling on
+the outer side of the ankle, able to bear partial weight.
+
+EXAMINATION
+Moderate swelling over the lateral malleolus with tenderness. No bony
+tenderness over the medial malleolus or base of fifth metatarsal. X-ray
+of the right ankle shows no fracture.
+
+DIAGNOSIS
+Grade II lateral ligament sprain, right ankle.
+
+TREATMENT
+- Elastic ankle support for three weeks.
+- Rest, ice, elevation; avoid stairs where possible for two weeks.
+- Paracetamol 500 mg as needed for pain (patient prefers to avoid other
+  painkillers).
+- Ankle-strengthening exercises after two weeks, sheet provided.
+
+Review only if pain worsens or swelling persists beyond three weeks.
+
+Dr. Farhan Qureshi, MS
+Arihant Orthopaedic Clinic, Mumbai
+3 August 2025

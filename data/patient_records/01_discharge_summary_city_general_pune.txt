@@ -1,0 +1,50 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, hospital, or medical record is
+# represented. Do not use for clinical purposes.
+
+CITY GENERAL HOSPITAL, PUNE
+DEPARTMENT OF CARDIOLOGY — DISCHARGE SUMMARY
+
+Patient Name: Mrs. Anjali Deshpande
+Age / Sex: 58 years / Female
+Patient ID: CGH-2025-00412
+Date of Admission: 6 January 2025
+Date of Discharge: 10 January 2025
+Treating Physician: Dr. Ramesh Kulkarni, MD (Consultant Cardiologist)
+
+PRESENTING COMPLAINT
+Mrs. Deshpande presented to the emergency department on 6 January 2025 with
+palpitations, breathlessness on mild exertion, and light-headedness that had
+worsened over two days.
+
+DIAGNOSIS
+Atrial fibrillation with rapid ventricular response, confirmed on 12-lead ECG
+and 24-hour Holter monitoring. Echocardiogram showed a structurally normal
+heart with an ejection fraction of 58%.
+
+SECONDARY FINDINGS
+Fasting blood glucose was mildly elevated at 112 mg/dL. The patient was
+advised to have her blood sugar profile re-checked within six months by her
+regular physician.
+
+HOSPITAL COURSE
+The patient was admitted to the cardiac care unit. Her heart rate was
+initially 142 beats per minute and irregular. Rate control was achieved with
+oral medication by day two. She remained haemodynamically stable for the rest
+of the stay and was discharged in sinus-controlled state.
+
+MEDICATIONS ON DISCHARGE
+1. Tablet Metoprolol succinate 50 mg, once daily in the morning, for heart
+   rate control.
+2. Tablet Pantoprazole 40 mg, once daily before breakfast, for two weeks.
+
+ADVICE ON DISCHARGE
+- Avoid caffeine and heavy exertion for four weeks.
+- Review in cardiology outpatient department after three months, or earlier
+  if palpitations recur.
+- Blood sugar profile to be repeated within six months.
+
+Dr. Ramesh Kulkarni, MD
+Consultant Cardiologist
+City General Hospital, Pune
+10 January 2025

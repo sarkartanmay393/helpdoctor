@@ -14,5 +14,3 @@ wheels/
 .cognee/
 patients.db
 .DS_Store
-
-data/

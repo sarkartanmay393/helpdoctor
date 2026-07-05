@@ -106,17 +106,21 @@ async def remember_text(patient_id: str, text: str, filename: str,
     """
     await ensure_db_setup()
     registry.ensure_patient(patient_id)
+    started = time.monotonic()
     await cognee.remember(
         text,
         dataset_name=patient_id,
         temporal_cognify=True,  # routed through to cognify() by remember()
         self_improvement=False,  # improve() is called explicitly instead
     )
+    remember_seconds = round(time.monotonic() - started, 1)
     registry.record_document(
         patient_id, filename, digest or registry.content_hash(text.encode()))
     improve_log = await run_improve(patient_id)
-    await export_graph_html(patient_id)
-    return {"ingested": filename, "improve": improve_log}
+    # No graph HTML export here: the UI hits /graph?refresh=1 right after an
+    # upload, which re-exports on demand — exporting here doubled the wait.
+    return {"ingested": filename, "improve": improve_log,
+            "remember_seconds": remember_seconds}
 
 
 async def run_ingestion(force: bool = False) -> dict:

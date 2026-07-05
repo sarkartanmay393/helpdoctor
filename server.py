@@ -70,17 +70,95 @@ def _clean_patient_id(raw: str) -> str:
     return pid.strip("_")
 
 
+_ocr_engine = None
+_OCR_MAX_PAGES = 20  # cap pathological documents; a record is rarely longer
+
+
+def _ocr_pdf(data: bytes) -> str:
+    """OCR fallback for scanned/image-only PDFs: rasterize pages with
+    pypdfium2 (already here as a pdfplumber dependency) and read them with
+    RapidOCR — local ONNX models, offline, no system binaries."""
+    global _ocr_engine
+    import io
+
+    import numpy as np
+    import pypdfium2 as pdfium
+    from rapidocr_onnxruntime import RapidOCR
+
+    if _ocr_engine is None:
+        _ocr_engine = RapidOCR()
+
+    pdf = pdfium.PdfDocument(io.BytesIO(data))
+    pages_text: list[str] = []
+    try:
+        for i, page in enumerate(pdf):
+            if i >= _OCR_MAX_PAGES:
+                break
+            bitmap = page.render(scale=200 / 72)  # ~200 DPI, plenty for print
+            image = np.asarray(bitmap.to_pil().convert("RGB"))
+            result, _ = _ocr_engine(image)
+            if result:
+                pages_text.append("\n".join(item[1] for item in result))
+    finally:
+        pdf.close()
+    return "\n\n".join(pages_text)
+
+
+def _pdf_text(data: bytes) -> str:
+    """Three extraction stages, because real-world PDFs are messy: pypdf
+    first (fast), pdfplumber second (pdfminer-based, reads many PDFs whose
+    text layer pypdf returns empty for), and local OCR last for scanned
+    image-only PDFs — the common case for Indian medical records."""
+    import io
+
+    text = ""
+    try:
+        from pypdf import PdfReader
+
+        reader = PdfReader(io.BytesIO(data))
+        if reader.is_encrypted:
+            try:
+                reader.decrypt("")  # PDFs "encrypted" with an empty owner password
+            except Exception:
+                raise ValueError(
+                    "This PDF is password-protected. Remove the password and "
+                    "re-upload.")
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    except ValueError:
+        raise
+    except Exception:
+        pass  # fall through to pdfplumber
+
+    if not text.strip():
+        try:
+            import pdfplumber
+
+            with pdfplumber.open(io.BytesIO(data)) as pdf:
+                text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+        except Exception:
+            pass
+
+    if not text.strip():
+        try:
+            text = _ocr_pdf(data)
+        except Exception:
+            pass
+
+    if not text.strip():
+        raise ValueError(
+            "Could not read this PDF: no text layer, and OCR found no "
+            "readable text either (is the scan legible?). Please upload a "
+            "clearer scan or a text-based PDF, or copy the content into a "
+            ".txt file and upload that instead.")
+    return text
+
+
 def _extract_text(filename: str, data: bytes) -> str:
     ext = Path(filename).suffix.lower()
     if ext == ".txt":
         return data.decode("utf-8", errors="replace")
     if ext == ".pdf":
-        import io
-
-        from pypdf import PdfReader
-
-        reader = PdfReader(io.BytesIO(data))
-        return "\n".join(page.extract_text() or "" for page in reader.pages)
+        return _pdf_text(data)
     raise ValueError(f"Unsupported file type: {ext} (allowed: .txt, .pdf)")
 
 
@@ -141,7 +219,9 @@ async def ingest_document(
                            "skipped (nothing re-ingested)."}
 
     try:
-        text = _extract_text(file.filename or "upload", data)
+        # In a thread: PDF parsing is blocking, and the OCR fallback for
+        # scanned PDFs takes a few seconds per page.
+        text = await asyncio.to_thread(_extract_text, file.filename or "upload", data)
     except Exception as exc:
         return JSONResponse(status_code=400, content={"error": str(exc)})
     if not text.strip():

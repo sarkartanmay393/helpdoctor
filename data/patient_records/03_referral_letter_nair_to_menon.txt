@@ -1,0 +1,47 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, clinic, or medical record is
+# represented. Do not use for clinical purposes.
+
+NAIR FAMILY CLINIC
+12, Shanti Kutir Lane, Vile Parle East, Mumbai
+Dr. Priya Nair, MBBS, DNB (Family Medicine)
+
+5 November 2025
+
+To:
+Dr. Vikram Menon, DM (Cardiology)
+Consultant Cardiac Electrophysiologist
+Meridian Heart Institute, Anna Nagar, Chennai
+
+Subject: Referral of Mrs. Anjali Deshpande, 58/F, for specialist cardiac
+rhythm evaluation
+
+Dear Dr. Menon,
+
+I am referring Mrs. Anjali Deshpande, a 58-year-old lady currently staying
+in Mumbai with her daughter, for your specialist opinion. The family is
+relocating to Chennai next month, so she will be able to attend your clinic
+for ongoing care.
+
+She has a known heart rhythm disorder, first diagnosed during an inpatient
+admission at City General Hospital, Pune in January 2025 under
+Dr. Ramesh Kulkarni (Consultant Cardiologist). She was discharged on
+metoprolol succinate 50 mg daily for rate control. I do not have the
+complete hospital file with me; the January 2025 discharge summary from
+City General Hospital remains the authoritative record of that diagnosis.
+
+Over the last month she has reported recurrent palpitations, roughly two
+or three episodes per week, each lasting several minutes. An irregular
+pulse was also noted at a routine lab visit in June 2025. She has never
+been started on any blood-thinning medication, and given her age and
+history I am concerned about stroke risk. Her June 2025 bloods also showed
+a pre-diabetic HbA1c of 6.2%, which may be relevant to her overall risk
+profile.
+
+Request: kindly evaluate her for long-term rhythm management and for
+stroke-prevention therapy, and advise on further management.
+
+With warm regards,
+
+Dr. Priya Nair
+Nair Family Clinic, Mumbai

@@ -1,0 +1,10 @@
+SYNTHETIC DEMO TRANSCRIPT — fictional teleconsultation, 2 July 2026.
+(Ready-to-paste material for the "Paste a conversation transcript" box,
+patient: Anjali Deshpande.)
+
+Dr. Menon: Good afternoon Mrs. Deshpande. I have your echocardiogram and kidney function results.
+Patient: Good afternoon doctor. Is everything alright?
+Dr. Menon: Yes. The echocardiogram is reassuring — pumping function is normal and unchanged. Kidney function is normal too, so we do not need to adjust the apixaban dose.
+Patient: And the ankle swelling?
+Dr. Menon: With normal heart and kidney results, the evening ankle swelling is most likely positional. Use a footstool in the evenings and reduce added salt. If swelling becomes constant or spreads, contact me immediately.
+Patient: Thank you doctor, that is a relief.

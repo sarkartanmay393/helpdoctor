@@ -1,0 +1,52 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, hospital, or medical record is
+# represented. Do not use for clinical purposes.
+
+CITY GENERAL HOSPITAL, PUNE
+CARDIOLOGY OUTPATIENT DEPARTMENT — FOLLOW-UP NOTE
+
+Patient Name: Mrs. Anjali Deshpande
+Age / Sex: 59 years / Female
+Patient ID: CGH-2025-00412
+Date of Visit: 12 May 2026
+Consultant: Dr. Ramesh Kulkarni, MD (Consultant Cardiologist)
+
+CONTEXT
+Mrs. Deshpande, previously admitted under my care in January 2025, visited
+Pune this month and came for a planned review. Since her family relocated
+to Chennai, her rhythm care has been managed by Dr. Vikram Menon at
+Meridian Heart Institute, Chennai, to whom she was referred by her family
+physician Dr. Priya Nair of Mumbai in November 2025. I have received
+Dr. Menon's prescription record of 24 November 2025.
+
+INTERVAL HISTORY
+The patient reports marked improvement since Dr. Menon started her on the
+anticoagulant in November 2025. She has had no palpitation episodes in the
+last four months, compared with two to three episodes per week before that
+consultation. She tolerates both her current medications well, with no
+bleeding events, dizziness, or breathlessness.
+
+EXAMINATION
+Pulse 76 per minute, still mildly irregular but well rate-controlled.
+Blood pressure 128/78 mmHg. Today's ECG shows a controlled ventricular
+rate, substantially improved compared with her admission ECG of
+January 2025.
+
+ASSESSMENT
+The rhythm condition identified during her January 2025 admission is now
+well controlled on the combination of rate-control and anticoagulant
+therapy. Stroke-prevention cover is adequate. Her symptomatic improvement
+after starting treatment under Dr. Menon is clearly documented and
+consistent with my clinical findings today.
+
+PLAN
+- Continue current medications unchanged; no dose adjustment needed.
+- Annual review here whenever she visits Pune; routine care to continue
+  with Dr. Menon at Meridian Heart Institute, Chennai.
+- Repeat HbA1c advised — her June 2025 result was in the pre-diabetic
+  range and should be monitored yearly.
+
+Dr. Ramesh Kulkarni, MD
+Consultant Cardiologist
+City General Hospital, Pune
+12 May 2026

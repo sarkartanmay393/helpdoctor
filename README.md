@@ -10,8 +10,9 @@ own history.
 office**, built on [Cognee](https://github.com/topoteretes/cognee). The
 office records everything about a patient in one place: after each visit,
 the front desk uploads incoming documents (discharge summaries, lab
-reports, prescription PDFs) and the consultation transcript, and each one
-is ingested into that patient's own knowledge graph. In production, the
+reports, prescription PDFs — scanned ones are OCR'd locally, since Indian
+medical records are usually scans) and the consultation transcript, and
+each one is ingested into that patient's own knowledge graph. In production, the
 transcripts come from speech-to-text on doctor-patient audio; this demo
 shows the ingestion path directly via a pasted transcript. Inside the
 office, a **Doctor's Desk** chat answers questions across the whole patient
@@ -126,8 +127,10 @@ fibrillation` and answers correctly, with sources.
   questions about a named patient route to `recall()` scoped to that patient.
   No booking, no calendar, no cross-patient aggregate reasoning.
 - **Backend:** FastAPI ([server.py](server.py)). Office-side endpoints:
-  `/ingest` (multipart, hash-dedup), `/ingest_transcript` (pasted
-  conversation, same pipeline + dedup), `/doctor/ask`, `/patients`.
+  `/ingest` (multipart, hash-dedup; PDF text via pypdf → pdfplumber →
+  RapidOCR fallback for scanned image-only PDFs, all local/offline),
+  `/ingest_transcript` (pasted conversation, same pipeline + dedup),
+  `/doctor/ask`, `/patients`.
   Patient-access API (each call scoped to one patient's graph):
   `/ask`, `/patients/{id}/documents`, `/graph?patient_id=...`, `/forget`.
   The isolation behind that scoping is enforced by cognee's access control

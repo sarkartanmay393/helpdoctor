@@ -1,0 +1,39 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, clinic, or medical record is
+# represented. Do not use for clinical purposes.
+#
+# NOTE FOR DEMO DESIGN: documents 06-09 are realistic "distractor" records —
+# the kind of unrelated paperwork a real patient folder accumulates. They give
+# vector retrieval a realistic corpus to rank against.
+
+SMILEWELL DENTAL CLINIC, KOTHRUD, PUNE
+CONSULTATION NOTE
+
+Patient Name: Mrs. Anjali Deshpande
+Age / Sex: 59 years / Female
+Date of Visit: 20 May 2026
+Dentist: Dr. Sneha Bhatt, BDS, MDS
+
+COMPLAINT
+Intermittent pain in the lower left back tooth for three weeks, worse with
+hot food.
+
+FINDINGS
+Deep caries in tooth 36 with tenderness on percussion. Gums show mild
+generalised recession consistent with age. Oral hygiene fair.
+
+NOTE
+The patient reports she takes a blood-thinning tablet prescribed by her
+heart specialist in Chennai. In view of bleeding risk, extraction is
+deferred; root canal treatment is preferred and physician clearance will be
+requested before any surgical procedure.
+
+PLAN
+- Root canal treatment for tooth 36, first sitting scheduled 27 May 2026.
+- Chlorhexidine mouthwash twice daily for two weeks.
+- Written clearance to be obtained from her treating physician regarding
+  the blood-thinning medication before any extraction.
+
+Dr. Sneha Bhatt, BDS, MDS
+SmileWell Dental Clinic, Pune
+20 May 2026

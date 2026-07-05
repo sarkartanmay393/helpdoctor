@@ -156,7 +156,7 @@
   <!-- 2. DOCUMENT UPLOAD -->
   <section class="panel">
     <h2>2 &middot; Add a medical document</h2>
-    <div class="hint">.txt or .pdf &mdash; a discharge summary, lab report, prescription&hellip; Re-uploading the same file is detected by content hash and skipped.</div>
+    <div class="hint">.txt or .pdf &mdash; a discharge summary, lab report, prescription&hellip; Scanned PDFs are OCR'd locally (takes a few extra seconds per page). Re-uploading the same file is detected by content hash and skipped.</div>
     <form id="doc-form" class="row">
       <input type="file" id="doc-file" accept=".txt,.pdf">
       <button type="submit" id="doc-btn">Ingest document</button>
@@ -385,6 +385,21 @@ function showMsg(id, text, ok) {
   el.className = "msg " + (ok ? "ok" : "err");
 }
 
+// Live elapsed counter while an ingestion runs, so a multi-minute LLM
+// extraction doesn't look like a frozen page. Returns a stop() function.
+function startTicker(msgId, label) {
+  const t0 = Date.now();
+  const tick = () => {
+    const s = Math.round((Date.now() - t0) / 1000);
+    const m = Math.floor(s / 60);
+    showMsg(msgId, `${label} — ${m ? m + "m " : ""}${s % 60}s elapsed. ` +
+      "Graph extraction makes several LLM calls; 1–4 minutes per document is normal.", true);
+  };
+  tick();
+  const id = setInterval(tick, 1000);
+  return () => clearInterval(id);
+}
+
 // ---------- uploads ----------
 
 async function uploadTo(endpoint, fileInputId, btnId, msgId, busyLabel) {
@@ -399,20 +414,23 @@ async function uploadTo(endpoint, fileInputId, btnId, msgId, busyLabel) {
   const btn = $(btnId);
   const original = btn.textContent;
   btn.disabled = true; btn.textContent = busyLabel;
-  showMsg(msgId, "Working… (extraction + graph build makes LLM calls)", true);
+  const stopTicker = startTicker(msgId, "Ingesting");
   try {
     const res = await fetch(API + endpoint, { method: "POST", body: fd });
     const data = await res.json();
+    stopTicker();
     if (!res.ok) throw new Error(data.error || res.statusText);
     if (data.duplicate) {
       showMsg(msgId, data.message, true);
     } else {
       let m = `Ingested '${data.ingested}'.`;
+      if (data.remember_seconds) m += `\nremember() took ${data.remember_seconds}s.`;
       if (data.improve) m += `\n${data.improve}`;
       showMsg(msgId, m, true);
     }
     input.value = "";
   } catch (e) {
+    stopTicker();
     showMsg(msgId, "Failed: " + e.message, false);
   } finally {
     btn.disabled = false; btn.textContent = original;
@@ -437,7 +455,7 @@ $("transcript-form").onsubmit = async (e) => {
   if (!text) return showMsg("transcript-msg", "Paste a transcript first.", false);
   const btn = $("transcript-btn");
   btn.disabled = true; btn.textContent = "Ingesting…";
-  showMsg("transcript-msg", "Working… (graph build makes LLM calls)", true);
+  const stopTicker = startTicker("transcript-msg", "Ingesting transcript");
   try {
     const res = await fetch(API + "/ingest_transcript", {
       method: "POST",
@@ -445,15 +463,19 @@ $("transcript-form").onsubmit = async (e) => {
       body: JSON.stringify({ patient_id: pid, patient_name: currentPatientName(), text }),
     });
     const data = await res.json();
+    stopTicker();
     if (!res.ok) throw new Error(data.error || res.statusText);
     if (data.duplicate) {
       showMsg("transcript-msg", data.message, true);
     } else {
-      showMsg("transcript-msg",
-        `Ingested '${data.ingested}'.` + (data.improve ? `\n${data.improve}` : ""), true);
+      let m = `Ingested '${data.ingested}'.`;
+      if (data.remember_seconds) m += `\nremember() took ${data.remember_seconds}s.`;
+      if (data.improve) m += `\n${data.improve}`;
+      showMsg("transcript-msg", m, true);
       $("transcript-text").value = "";
     }
   } catch (err) {
+    stopTicker();
     showMsg("transcript-msg", "Failed: " + err.message, false);
   } finally {
     btn.disabled = false; btn.textContent = "Ingest transcript";

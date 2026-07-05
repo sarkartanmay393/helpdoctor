@@ -1,0 +1,39 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, laboratory, or medical record is
+# represented. Do not use for clinical purposes.
+
+SUNRISE DIAGNOSTICS LABORATORY, ANDHERI WEST, MUMBAI
+LABORATORY INVESTIGATION REPORT
+
+Patient Name: Mrs. Anjali Deshpande
+Age / Sex: 58 years / Female
+Lab Reference No: SDL-M-88213
+Sample Collected: 18 June 2025, 8:15 AM (fasting)
+Report Issued: 18 June 2025, 6:40 PM
+Referring Doctor: Dr. Priya Nair, MBBS, DNB (Family Medicine),
+Nair Family Clinic, Vile Parle, Mumbai
+
+CLINICAL NOTE FROM REFERRING DOCTOR
+Patient is temporarily residing in Mumbai with her daughter. Known cardiac
+patient — she reports a heart rhythm problem diagnosed during a
+hospitalization at City General Hospital, Pune in January 2025, under the
+care of Dr. Ramesh Kulkarni. Discharge advice included a repeat blood sugar
+profile within six months; this panel is ordered accordingly.
+
+RESULTS
+
+Glycated Haemoglobin (HbA1c): 6.2 %          [Reference: below 5.7]
+Fasting Plasma Glucose: 118 mg/dL            [Reference: 70 - 99]
+Serum Creatinine: 0.9 mg/dL                  [Reference: 0.6 - 1.1]
+Thyroid Stimulating Hormone (TSH): 2.8 mIU/L [Reference: 0.4 - 4.2]
+Haemoglobin: 12.6 g/dL                       [Reference: 12.0 - 15.0]
+
+REMARKS
+HbA1c and fasting glucose are in the pre-diabetic range. Correlation with
+clinical findings is advised. During sample collection the phlebotomist
+noted an irregular pulse; the patient confirmed this is a known finding
+related to her existing cardiac condition.
+
+Dr. S. Iyer, MD (Pathology)
+Sunrise Diagnostics Laboratory, Mumbai
+18 June 2025

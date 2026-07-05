@@ -1,0 +1,48 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, hospital, or medical record is
+# represented. Do not use for clinical purposes.
+#
+# NOTE FOR DEMO DESIGN: this prescription deliberately does NOT name the
+# patient's underlying diagnosis. It only points back to the January 2025
+# discharge summary. Answering "what condition is this medication treating?"
+# therefore requires connecting this document to document 1 via the
+# knowledge graph — a pure vector search over this file alone cannot answer it.
+
+MERIDIAN HEART INSTITUTE, ANNA NAGAR, CHENNAI
+OUTPATIENT PRESCRIPTION RECORD
+
+Patient Name: Mrs. Anjali Deshpande
+Age / Sex: 58 years / Female
+OPD Registration No: MHI-OP-55901
+Date of Consultation: 24 November 2025
+Consultant: Dr. Vikram Menon, DM (Cardiology), Cardiac Electrophysiologist
+
+REFERRAL CONTEXT
+Seen on referral from Dr. Priya Nair, Nair Family Clinic, Mumbai, for the
+cardiac rhythm condition documented in the patient's January 2025 discharge
+summary from City General Hospital, Pune (treating physician:
+Dr. Ramesh Kulkarni). Today's ECG and rhythm strip are consistent with the
+previously documented disorder. CHA2DS2-VASc assessment indicates elevated
+stroke risk; anticoagulation is indicated.
+
+PRESCRIPTION (Rx)
+
+1. Tablet Apixaban 5 mg — one tablet twice daily, morning and night,
+   long term. Purpose: stroke prevention in the setting of the rhythm
+   disorder documented in the January 2025 City General Hospital, Pune
+   discharge summary.
+
+2. Tablet Metoprolol succinate 50 mg — continue once daily in the morning,
+   as originally prescribed at discharge in January 2025.
+
+INSTRUCTIONS TO PATIENT
+- Do not miss doses of the new blood-thinning tablet; missing doses
+  increases stroke risk.
+- Report any unusual bleeding, black stools, or easy bruising immediately.
+- Review in this clinic after three months with a repeat ECG.
+- A copy of this prescription has been requested to be sent to
+  Dr. Ramesh Kulkarni at City General Hospital, Pune for continuity of care.
+
+Dr. Vikram Menon, DM
+Meridian Heart Institute, Chennai
+24 November 2025

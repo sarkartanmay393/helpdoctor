@@ -1,0 +1,35 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, clinic, or medical record is
+# represented. Do not use for clinical purposes.
+
+CLEARVIEW EYE CARE CENTRE, ADYAR, CHENNAI
+OPHTHALMIC EXAMINATION REPORT
+
+Patient Name: Mrs. Anjali Deshpande
+Age / Sex: 59 years / Female
+Date of Examination: 9 January 2026
+Optometrist: Mr. K. Srinivasan, B.Optom
+Reviewing Doctor: Dr. Lakshmi Raghavan, MS (Ophthalmology)
+
+COMPLAINT
+Difficulty reading small print, mild eye strain in the evenings.
+
+EXAMINATION
+Visual acuity: Right eye 6/9, Left eye 6/9, improving to 6/6 both eyes
+with correction. Near vision N8 with +2.25 D addition. Intraocular
+pressure 14 mmHg both eyes. Anterior segment normal. Dilated fundus
+examination shows healthy optic discs and maculae; no diabetic changes
+seen in either eye.
+
+DIAGNOSIS
+Presbyopia with mild compound myopic astigmatism.
+
+ADVICE
+- New progressive spectacles prescribed.
+- Routine eye review in one year.
+- Given her borderline blood sugar history, annual dilated fundus
+  examination is recommended.
+
+Dr. Lakshmi Raghavan, MS
+ClearView Eye Care Centre, Chennai
+9 January 2026

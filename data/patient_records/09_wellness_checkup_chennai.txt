@@ -1,0 +1,37 @@
+# SYNTHETIC TEST DATA — This document is entirely fictional, generated for a
+# software demo. No real patient, doctor, clinic, or medical record is
+# represented. Do not use for clinical purposes.
+
+GREENLEAF HEALTH CENTRE, VELACHERY, CHENNAI
+ANNUAL WELLNESS VISIT SUMMARY
+
+Patient Name: Mrs. Anjali Deshpande
+Age / Sex: 59 years / Female
+Date of Visit: 17 February 2026
+Physician: Dr. Meera Krishnan, MBBS
+
+GENERAL ASSESSMENT
+Routine annual wellness visit. The patient feels generally well. Weight
+64 kg, height 156 cm, BMI 26.3. Blood pressure 126/80 mmHg.
+
+LIFESTYLE REVIEW
+Walks 30 minutes daily, vegetarian diet, does not smoke, does not drink
+alcohol. Sleep adequate. Advised to add two days of light strength
+exercise per week and to reduce fried snacks.
+
+PREVENTIVE CARE
+- Influenza vaccination administered today (left deltoid, batch FLU-2026-114).
+- Bone density screening discussed; DEXA scan advised within the year
+  given post-menopausal status.
+- Cervical and breast cancer screening up to date as per records shown.
+
+NOTE
+The patient follows up separately with her specialists for her ongoing
+conditions; no changes made to any existing medication at this visit.
+
+NEXT VISIT
+Annual wellness review, February 2027.
+
+Dr. Meera Krishnan, MBBS
+GreenLeaf Health Centre, Chennai
+17 February 2026
